@@ -1,6 +1,4 @@
-Prueba con Puzzle 85
+PD: no funciona desde el puzzle 80 en adelante
 
-
-
-Puzzle 130
-RCKangaroo.exe -dp 14 -range 130 -start 30e7665705359f04f28b88cf897c603c9 -pubkey 03633cbe3ec02b9401c5effa144c5b4d22f87940259634858fc7e59b1c09937852
+Prueba con Puzzle 75
+RCKangaroo.exe -dp 14 -range 75 -start 4000000000000000000 -pubkey 03726b574f193e374686d8e12bc6e4142adeb06770e0a2856f5e4ad89f66044755

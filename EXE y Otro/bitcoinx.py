@@ -3,6 +3,34 @@ import hashlib
 import base58
 import numpy as np
 from decimal import Decimal, getcontext
+from bit import Key
+from bitcoin import encode_privkey, privkey_to_address
+
+
+#PrivateKeyWIF a Address
+def pkWifToAddress(pkWIF):
+
+    # Convierte la clave privada WIF a una dirección de Bitcoin
+    address = privkey_to_address(pkWIF)
+
+    # Convierte la dirección a minúsculas
+    address_lower = address.lower()
+
+    return address_lower
+
+
+#Function para privatekey hex a PrivateKey WIF
+def btcPrivatekeyHextoWIF(pkHex):  
+
+    # Codifica la clave privada sin comprimir en formato WIF
+    private_key_wif_uncompressed = encode_privkey(bytes.fromhex(pkHex), 'wif')
+
+    # Codifica la clave privada comprimida en formato WIF
+    private_key_wif_compressed = encode_privkey(bytes.fromhex(pkHex), 'wif_compressed')
+
+    btcWIFData = [private_key_wif_uncompressed, private_key_wif_compressed]
+    return btcWIFData
+
 
 # Obtener Obtener HEX Por el numero de pagina
 def get_hex_range_from_page_number(page_number, keys_per_page):

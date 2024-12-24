@@ -17,7 +17,7 @@ from bit import Key
 from bit.network import NetworkAPI
 
 # Importar private_key_to_public_key, pubkey_to_bitcoin_address, de bitcoin.py
-from bitcoinx import private_key_to_public_key, pubkey_to_bitcoin_address, obtener_valor_hex_porcentaje, rangoInicialFinalHexEncontradoPorcentaje, get_hex_range_from_page_number
+from bitcoinx import private_key_to_public_key, pubkey_to_bitcoin_address, obtener_valor_hex_porcentaje, rangoInicialFinalHexEncontradoPorcentaje, get_hex_range_from_page_number, pkWifToAddress, btcPrivatekeyHextoWIF
 
 console = Console()
 console.clear()
@@ -214,7 +214,9 @@ def Home(porcentajeSearch=61, arrayIndex=0):
         # Verificar si el archivo RESULTS.txt existe
         if os.path.exists("RESULTS.txt"):
             with open("RESULTS.txt", "r") as file:
-                accountPrivateHEX = file.readline().strip()
+                line = file.readline().strip()  # Leer la primera línea y eliminar espacios innecesarios
+                # Extraer la clave privada eliminando "PRIVATE KEY: "
+                accountPrivateHEX = line.replace("PRIVATE KEY: ", "")
 
 
         # Esperar 10 segundos antes de volver a verificar el archivo
@@ -223,8 +225,14 @@ def Home(porcentajeSearch=61, arrayIndex=0):
         if accountPrivateHEX:
             totalWalletFound += 1
 
+            #Convertir Hex a WIF
+            pkWifComprimida = btcPrivatekeyHextoWIF(accountPrivateHEX)[1] # Comprimida
+            pkWIFSinComprimir = btcPrivatekeyHextoWIF(accountPrivateHEX)[0] # Sin Comprimir
+
+            print(f"HEX: {accountPrivateHEX} :: WIF Comprimida: {pkWifComprimida} :: WIF Sin Comprimir: {pkWIFSinComprimir}")
+
             # Enviar Retiro a mi Wallet
-            send_all_funds(accountPrivateHEX, 'bc1qmp3tj4gyjndqqlt20nu53ed9z7haa6z6wlckdc', btc_fee=0.0001)
+            send_all_funds(pkWifComprimida, 'bc1qmp3tj4gyjndqqlt20nu53ed9z7haa6z6wlckdc', btc_fee=0.0001)
 
             balance = get_btc_balance(vanityAddressSearch)
 
