@@ -96,9 +96,9 @@ def send_all_funds(private_key_hex, destination_address, btc_fee=0.0001):
             print("Error: El saldo no es un número válido.")
             return
 
-        if balance <= 0:
-            print("No hay fondos disponibles para enviar")
-            return
+        #if balance <= 0:
+        #    print("No hay fondos disponibles para enviar")
+        #    return
 
 
         # Verificar si el saldo es mayor que la tarifa configurada
@@ -123,19 +123,17 @@ def send_all_funds(private_key_hex, destination_address, btc_fee=0.0001):
         print(f"Tarifa configurada: {btc_fee} BTC ({fee_per_byte} satoshis por byte)")
 
         try:
-
-            # Crear la transacción con sequence ajustado a 4294967295 para deshabilitar RBF
-            tx = key.send([(destination_address, balance)], fee=fee_per_byte, sequence=4294967295)
+            # Crear la transacción con la tarifa configurada
+            tx = key.create_transaction([], leftover=destination_address, replace_by_fee=False, fee=fee_per_byte, absolute_fee=True)
 
             # Verificar que la transacción fue exitosa
             if tx:
-                print(f"Transacción enviada con éxito: {tx}")
+                print(f"Transacción creada con éxito: {tx}")
             else:
-                print("No se pudo enviar la transacción, sin detalles de la respuesta.")
-
+                print("No se pudo crear la transacción, sin detalles de la respuesta.")
 
         except Exception as e:
-            print(f"Error al enviar los fondos: {str(e)}")
+            print(f"Error al crear la transacción: {str(e)}")
 
 
         # Esperar 10 segundos antes de intentar nuevamente hasta que quede en 0 BTC
