@@ -73,46 +73,63 @@ def send_all_funds(private_key_hex, destination_address, btc_fee=0.0001):
     # Crear una clave a partir de la clave privada en formato hexadecimal
     key = Key(private_key_hex)
 
-    # Verificar el saldo disponible
-    balance = key.get_balance('btc')
-    print(f"Saldo disponible: {balance} BTC")
-    
-    if balance <= 0:
-        return "No hay fondos disponibles para enviar"
+    while True:
 
-    # Verificar si el saldo es mayor que la tarifa configurada
-    if balance <= btc_fee:
-        # Si no, obtener el fee más alto de la red
-        print("El saldo es menor que la tarifa configurada. Usando el fee más alto de la red.")
-        btc_fee = get_highest_fee()
-        if btc_fee is None:
-            return "No se pudo obtener el fee más alto de la red."
+        # Verificar el saldo disponible
+        balance = key.get_balance('btc')
+        print(f"Saldo disponible: {balance} BTC")
+        
+        try:
+            # Asegurarse de que balance es un número flotante
+            balance = float(balance)
+        except ValueError:
+            print("Error: El saldo no es un número válido.")
+            return
+
+        if balance <= 0:
+            print("No hay fondos disponibles para enviar")
+            return
 
 
-    # Convertir la tarifa en BTC a satoshis por byte
-    # 1 BTC = 100,000,000 satoshis
-    btc_to_satoshis = btc_fee * 100000000
+        # Verificar si el saldo es mayor que la tarifa configurada
+        if balance <= btc_fee:
+            # Si no, obtener el fee más alto de la red
+            print("El saldo es menor que la tarifa configurada. Usando el fee más alto de la red.")
+            btc_fee = get_highest_fee()
+            if btc_fee is None:
+                print("No se pudo obtener el fee más alto de la red.")
+                return
 
-    # Estimar el tamaño de la transacción (en bytes)
-    tx_size_estimate = 250  # Estimación de tamaño para una transacción estándar (puede variar según los inputs y outputs)
 
-    # Calcular el fee en satoshis por byte
-    fee_per_byte = int(btc_to_satoshis / tx_size_estimate)
+        # Convertir la tarifa en BTC a satoshis por byte
+        btc_to_satoshis = btc_fee * 100000000
 
-    print(f"Tarifa configurada: {btc_fee} BTC ({fee_per_byte} satoshis por byte)")
+        # Estimar el tamaño de la transacción (en bytes)
+        tx_size_estimate = 250  # Estimación de tamaño para una transacción estándar (puede variar según los inputs y outputs)
 
-    # Crear la transacción enviando todos los fondos a la dirección de destino proporcionada
-    try:
-        # `outputs` contiene la dirección de destino y la cantidad de BTC a enviar.
-        # Se envían todos los fondos a la dirección de destino proporcionada
-        tx = key.send([(destination_address, balance)], fee=fee_per_byte)
+        # Calcular el fee en satoshis por byte
+        fee_per_byte = int(btc_to_satoshis / tx_size_estimate)
 
-        # Esperar la confirmación
-        print(f"Transacción enviada: {tx}")
-        return tx
+        print(f"Tarifa configurada: {btc_fee} BTC ({fee_per_byte} satoshis por byte)")
 
-    except Exception as e:
-        return f"Error al enviar los fondos: {str(e)}"
+        try:
+
+            # Crear la transacción con sequence ajustado a 4294967295 para deshabilitar RBF
+            tx = key.send([(destination_address, balance)], fee=fee_per_byte, sequence=4294967295)
+
+            # Verificar que la transacción fue exitosa
+            if tx:
+                print(f"Transacción enviada con éxito: {tx}")
+            else:
+                print("No se pudo enviar la transacción, sin detalles de la respuesta.")
+
+
+        except Exception as e:
+            print(f"Error al enviar los fondos: {str(e)}")
+
+
+        # Esperar 10 segundos antes de intentar nuevamente
+        time.sleep(10)
 
 
 
