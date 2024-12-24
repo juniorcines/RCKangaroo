@@ -1,0 +1,16 @@
+Prueba con Puzzle 85
+
+PrivateKey: 00000000000000000000000000000000000000000011720c4f018d51b8cebba8
+PubKey: 0329c4574a4fd8c810b7e42a4b398882b381bcd85e40c6883712912d167c83e73a
+Direccion: 1Kh22PvXERd2xpTQk3ur6pPEqFeckCJfAr
+
+RCKangaroo.exe 
+
+
+
+Puzzle 85 una clave de 85 bits
+RCKangaroo.exe -dp 14 -range 85 -start 1000000000000000000000 -pubkey 0329c4574a4fd8c810b7e42a4b398882b381bcd85e40c6883712912d167c83e73a
+
+
+Puzzle 66
+RCKangaroo.exe -dp 14 -range 66 -start 10000000000000000 -pubkey 024ee2be2d4e9f92d2f5a4a03058617dc45befe22938feed5b7a6b7282dd74cbdd
