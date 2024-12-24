@@ -12,6 +12,9 @@ from rich.console import Console
 
 import threading
 
+# Importar private_key_to_public_key, pubkey_to_bitcoin_address, de bitcoin.py
+from bitcoinx import private_key_to_public_key, pubkey_to_bitcoin_address, obtener_valor_hex_porcentaje, rangoInicialFinalHexEncontradoPorcentaje, get_hex_range_from_page_number
+
 console = Console()
 console.clear()
 
@@ -73,48 +76,47 @@ def crearFile(filename, text):
         print(f"Error al escribir en {filename}: {e}")
 
 
-
-def Home():
-
+def Home(porcentajeSearch=30):
     binary_dir = os.path.join("./")
     miner_binary = os.path.join("RCKangaroo.exe")
     
-    # 13zb1hQbWVsc2S7ZTZnP2G4undNNpdh5so
-
-    # Puzzle 67 Buscar >> Buscar Por la PubKey, si se descubrio la Pubkey ejecutamos para obtener la clave y luego retiramos los fondos
-    puzzleNumero = 66
-    vanityAddressSearch = "13zb1hQbWVsc2S7ZTZnP2G4undNNpdh5so" # Direccion
+    puzzleNumero = 135
+    vanityAddressSearch = "13zb1hQbWVsc2S7ZTZnP2G4undNNpdh5so"
     pubKeySearch = "024ee2be2d4e9f92d2f5a4a03058617dc45befe22938feed5b7a6b7282dd74cbdd"
-    hexStartSearch = '10000000000000000' #Puzzle 66 Inicia desde: 10000000000000000
+    hexStartSearch = obtener_valor_hex_porcentaje('4000000000000000000000000000000000', '7fffffffffffffffffffffffffffffffff', porcentajeSearch)
 
-    console.print(f"[white]Starting miner >> {hexStartSearch.upper()}][/white]")
+    console.print(f"[white]Starting miner >> {hexStartSearch.upper()} %{porcentajeSearch}][/white]")
 
     process = subprocess.Popen(f"{miner_binary} -dp 14 -range {puzzleNumero} -start {hexStartSearch} -pubkey {pubKeySearch}", stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=binary_dir)
 
     buffer = b""
     accountPrivateHEX = None
-
     totalWalletFound = 0
 
+    # Start time tracking to stop after 1 hour
+    start_time = time.time()
+
     while True:
+        # Check if 1 hour has passed
+        if time.time() - start_time >= 3600:  # 3600 seconds = 1 hour
+            print("1 hour passed, stopping the miner.")
+            process.terminate()  # Terminate the process after 1 hour
+            break
 
         # Verificar si el archivo RESULTS.txt existe
         if os.path.exists("RESULTS.txt"):
             with open("RESULTS.txt", "r") as file:
-                # Tomar la primera línea del archivo y asignarla a accountPrivateHEX
                 accountPrivateHEX = file.readline().strip()
-
 
         # Esperar 5 segundos antes de volver a verificar el archivo
         time.sleep(5)
 
         if accountPrivateHEX:
-
             totalWalletFound += 1
 
             balance = get_btc_balance(vanityAddressSearch)
 
-            # Imprimir el panel con el texto y estilos especificados, incluyendo el color gris para el panel
+            # Imprimir el panel con el texto y estilos especificados
             console.print(
                 Panel(
                     f"[white]Address: [green blink]{vanityAddressSearch}[/] "
@@ -131,8 +133,17 @@ def Home():
             enviar_mensaje_telegram("6448732612:AAFHvxnKSXBDGNwquGST9n4Q5UBwgojLXC8", "6808009121", f"Address: {vanityAddressSearch} [{balance} BTC] >>  Pk HEX: {accountPrivateHEX}")
             crearFile(f"{vanityAddressSearch}.txt", f"Address: {vanityAddressSearch} [{balance} BTC] >> Pk HEX: {accountPrivateHEX}")
 
-            # Salir del While Ya que se encontro Wallet
+            # Salir del While si se encuentra Wallet
             break
+
+    # Incrementar porcentajeSearch en 5% y reiniciar si llega a 100%
+    porcentajeSearch += 5
+    if porcentajeSearch > 100:
+        porcentajeSearch = 5
+
+    # Llamar a Home nuevamente con el nuevo porcentaje
+    Home(porcentajeSearch)
+
 
 
 Home()
