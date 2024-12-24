@@ -41,11 +41,15 @@ def getPubKey(address):
         
         # Si el código de estado es 404, ignoramos la respuesta y seguimos intentando
         if response.status_code == 404:
+            time.sleep(20)  # Esperar 20 segundos para la próxima consulta
             continue  # Continuar con el siguiente intento sin modificar 'results'
+        
         
         # Verificamos si la respuesta contiene el mensaje de error
         if "not-found-or-invalid-arg" in response.text:
+            time.sleep(20)  # Esperar 20 segundos para la próxima consulta
             continue  # Continuar con el siguiente intento sin modificar 'results'
+
 
         # La respuesta es directamente la clave pública como texto
         pubkey = response.text.strip()  # Eliminar posibles espacios en blanco
@@ -55,6 +59,7 @@ def getPubKey(address):
         if pubkey:
             print(f"Pubkey obtenida: {pubkey}")
             break
+
 
         time.sleep(20)  # Esperar 20 segundos para la próxima consulta
 
