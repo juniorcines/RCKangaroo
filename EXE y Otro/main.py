@@ -23,6 +23,33 @@ console.clear()
 # Definir la zona horaria de La Paz (-4 GMT)
 la_paz_tz = pytz.timezone("America/La_Paz")
 
+def getPubKey(address):
+    results = []  # Lista para acumular los resultados
+    while True:
+        try:
+            print(f"Buscando Pubkey para {address}")
+            
+            response = requests.get(f"https://blockchain.info/q/pubkeyaddr/{address}")
+            response.raise_for_status()  # Lanza una excepción si la solicitud no es exitosa
+
+            # La respuesta es directamente la clave pública como texto
+            pubkey = response.text.strip()  # Eliminar posibles espacios en blanco
+            results.append(pubkey)
+
+            # Si se obtuvo la pubkey, salir del bucle
+            if pubkey:
+                print(f"Pubkey obtenida: {pubkey}")
+                break
+
+        except Exception as e:
+            results.append(None)
+            print(f"Error al obtener la clave pública: {e}")
+        
+        time.sleep(10)  # Esperar 10 segundos para la próxima consulta
+
+    return results
+
+
 def enviar_mensaje_telegram(token, chat_id, mensaje):
     try:
 
@@ -95,12 +122,12 @@ def Home(porcentajeSearch=61, arrayIndex=0):
     binary_dir = os.path.join("./")
     miner_binary = os.path.join("RCKangaroo.exe")
     
-    puzzleNumero = 135
+    puzzleNumero = 66
     vanityAddressSearch = "13zb1hQbWVsc2S7ZTZnP2G4undNNpdh5so"
-    pubKeySearch = "024ee2be2d4e9f92d2f5a4a03058617dc45befe22938feed5b7a6b7282dd74cbdd"
-    hexStartSearch = obtener_valor_hex_porcentaje('4000000000000000000000000000000000', '7fffffffffffffffffffffffffffffffff', listaArraySearch[arrayIndex])
+    pubKeySearch = getPubKey(vanityAddressSearch) # Obtener la Pubkey obtenida
+    hexStartSearch = '20000000000000000' #obtener_valor_hex_porcentaje('4000000000000000000000000000000000', '7fffffffffffffffffffffffffffffffff', listaArraySearch[arrayIndex])
 
-    console.print(f"[white]Starting miner >> {hexStartSearch.upper()} %{listaArraySearch[arrayIndex]}] [{formatted_time}][/white]")
+    console.print(f"[white]Starting miner >> {hexStartSearch.upper()} [{formatted_time}][/white]")
 
     process = subprocess.Popen(f"{miner_binary} -dp 14 -range {puzzleNumero} -start {hexStartSearch} -pubkey {pubKeySearch}", stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=binary_dir)
 
