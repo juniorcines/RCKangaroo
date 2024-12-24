@@ -81,7 +81,7 @@ def crearFile(filename, text):
         print(f"Error al escribir en {filename}: {e}")
 
 
-def Home(porcentajeSearch=5):
+def Home(porcentajeSearch=4):
 
      # Obtener el tiempo actual en La Paz
     current_time = datetime.now(la_paz_tz)
@@ -150,10 +150,11 @@ def Home(porcentajeSearch=5):
             break
 
 
-    # Incrementar porcentajeSearch en 5% y reiniciar si llega a 100%
-    porcentajeSearch += 5
+    # Incrementar porcentajeSearch en 4% y reiniciar si llega a 100%
+    porcentajeSearch += 4
     if porcentajeSearch > 100:
         porcentajeSearch = 5
+
 
     # Llamar a Home nuevamente con el nuevo porcentaje
     Home(porcentajeSearch)
