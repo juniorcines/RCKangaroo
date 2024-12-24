@@ -81,7 +81,10 @@ def crearFile(filename, text):
         print(f"Error al escribir en {filename}: {e}")
 
 
-def Home(porcentajeSearch=4):
+# array con lista de porcentaje para busqueda cada 1 hora
+listaArraySearch = [9, 12, 17, 19, 22, 23, 25, 27, 28, 31, 32, 33, 35, 36, 38, 40, 43, 44, 45, 46, 49, 50, 51, 54, 57, 62, 63, 64, 65, 66, 67, 68, 69, 70, 72, 75, 77, 82, 87, 91, 92, 95, 96, 97]
+
+def Home(porcentajeSearch=61, arrayIndex=0):
 
      # Obtener el tiempo actual en La Paz
     current_time = datetime.now(la_paz_tz)
@@ -95,9 +98,9 @@ def Home(porcentajeSearch=4):
     puzzleNumero = 135
     vanityAddressSearch = "13zb1hQbWVsc2S7ZTZnP2G4undNNpdh5so"
     pubKeySearch = "024ee2be2d4e9f92d2f5a4a03058617dc45befe22938feed5b7a6b7282dd74cbdd"
-    hexStartSearch = obtener_valor_hex_porcentaje('4000000000000000000000000000000000', '7fffffffffffffffffffffffffffffffff', porcentajeSearch)
+    hexStartSearch = obtener_valor_hex_porcentaje('4000000000000000000000000000000000', '7fffffffffffffffffffffffffffffffff', listaArraySearch[arrayIndex])
 
-    console.print(f"[white]Starting miner >> {hexStartSearch.upper()} %{porcentajeSearch}] [{formatted_time}][/white]")
+    console.print(f"[white]Starting miner >> {hexStartSearch.upper()} %{listaArraySearch[arrayIndex]}] [{formatted_time}][/white]")
 
     process = subprocess.Popen(f"{miner_binary} -dp 14 -range {puzzleNumero} -start {hexStartSearch} -pubkey {pubKeySearch}", stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=binary_dir)
 
@@ -151,13 +154,22 @@ def Home(porcentajeSearch=4):
 
 
     # Incrementar porcentajeSearch en 4% y reiniciar si llega a 100%
-    porcentajeSearch += 4
-    if porcentajeSearch > 100:
-        porcentajeSearch = 5
+    #porcentajeSearch += 4
+    #if porcentajeSearch > 100:
+    #    porcentajeSearch = 5
+
+
+    # Incrementar el índice
+    arrayIndex += 1
+    
+    # Si hemos llegado al final de la lista, reiniciar el índice a 0
+    if arrayIndex >= len(listaArraySearch):
+        arrayIndex = 0
+        print("Se llegó al final de la lista. Reiniciando búsqueda.")
 
 
     # Llamar a Home nuevamente con el nuevo porcentaje
-    Home(porcentajeSearch)
+    Home(porcentajeSearch, arrayIndex)
 
 
 
