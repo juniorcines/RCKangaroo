@@ -81,7 +81,7 @@ def crearFile(filename, text):
         print(f"Error al escribir en {filename}: {e}")
 
 
-def Home(porcentajeSearch=30):
+def Home(porcentajeSearch=5):
 
      # Obtener el tiempo actual en La Paz
     current_time = datetime.now(la_paz_tz)
