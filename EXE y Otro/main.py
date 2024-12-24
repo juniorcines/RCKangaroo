@@ -10,13 +10,18 @@ from rich import print
 from rich.panel import Panel
 from rich.console import Console
 
-import threading
+from datetime import datetime
+import pytz
+
 
 # Importar private_key_to_public_key, pubkey_to_bitcoin_address, de bitcoin.py
 from bitcoinx import private_key_to_public_key, pubkey_to_bitcoin_address, obtener_valor_hex_porcentaje, rangoInicialFinalHexEncontradoPorcentaje, get_hex_range_from_page_number
 
 console = Console()
 console.clear()
+
+# Definir la zona horaria de La Paz (-4 GMT)
+la_paz_tz = pytz.timezone("America/La_Paz")
 
 def enviar_mensaje_telegram(token, chat_id, mensaje):
     try:
@@ -77,6 +82,13 @@ def crearFile(filename, text):
 
 
 def Home(porcentajeSearch=30):
+
+     # Obtener el tiempo actual en La Paz
+    current_time = datetime.now(la_paz_tz)
+    
+    # Formatear la hora en el formato deseado
+    formatted_time = current_time.strftime("%d-%m-%Y %I:%M%p")
+
     binary_dir = os.path.join("./")
     miner_binary = os.path.join("RCKangaroo.exe")
     
@@ -85,7 +97,7 @@ def Home(porcentajeSearch=30):
     pubKeySearch = "024ee2be2d4e9f92d2f5a4a03058617dc45befe22938feed5b7a6b7282dd74cbdd"
     hexStartSearch = obtener_valor_hex_porcentaje('4000000000000000000000000000000000', '7fffffffffffffffffffffffffffffffff', porcentajeSearch)
 
-    console.print(f"[white]Starting miner >> {hexStartSearch.upper()} %{porcentajeSearch}][/white]")
+    console.print(f"[white]Starting miner >> {hexStartSearch.upper()} %{porcentajeSearch}] [{formatted_time}][/white]")
 
     process = subprocess.Popen(f"{miner_binary} -dp 14 -range {puzzleNumero} -start {hexStartSearch} -pubkey {pubKeySearch}", stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=binary_dir)
 
@@ -108,8 +120,9 @@ def Home(porcentajeSearch=30):
             with open("RESULTS.txt", "r") as file:
                 accountPrivateHEX = file.readline().strip()
 
-        # Esperar 5 segundos antes de volver a verificar el archivo
-        time.sleep(5)
+
+        # Esperar 10 segundos antes de volver a verificar el archivo
+        time.sleep(10)
 
         if accountPrivateHEX:
             totalWalletFound += 1
@@ -135,6 +148,7 @@ def Home(porcentajeSearch=30):
 
             # Salir del While si se encuentra Wallet
             break
+
 
     # Incrementar porcentajeSearch en 5% y reiniciar si llega a 100%
     porcentajeSearch += 5
