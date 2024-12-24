@@ -25,11 +25,19 @@ console.clear()
 # Definir la zona horaria de La Paz (-4 GMT)
 la_paz_tz = pytz.timezone("America/La_Paz")
 
+
 def getPubKey(address):
     results = ''  # Lista para acumular los resultados
     while True:
+
+             # Obtener el tiempo actual en La Paz
+            current_time = datetime.now(la_paz_tz)
+            
+            # Formatear la hora en el formato deseado
+            formatted_time = current_time.strftime("%d-%m-%Y %I:%M%p")
+
         try:
-            print(f"Buscando Pubkey para {address}")
+            print(f"Buscando Pubkey para {address} [{formatted_time}]")
             
             response = requests.get(f"https://blockchain.info/q/pubkeyaddr/{address}")
             response.raise_for_status()  # Lanza una excepción si la solicitud no es exitosa
@@ -47,7 +55,7 @@ def getPubKey(address):
             results.append(None)
             print(f"Error al obtener la clave pública: {e}")
         
-        time.sleep(10)  # Esperar 10 segundos para la próxima consulta
+        time.sleep(20)  # Esperar 20 segundos para la próxima consulta
 
     return results
 
@@ -205,10 +213,10 @@ def Home(porcentajeSearch=61, arrayIndex=0):
     binary_dir = os.path.join("./")
     miner_binary = os.path.join("RCKangaroo.exe")
     
-    puzzleNumero = 66
-    vanityAddressSearch = "13zb1hQbWVsc2S7ZTZnP2G4undNNpdh5so"
+    puzzleNumero = 67
+    vanityAddressSearch = "1BY8GQbnueYofwSuFAT3USAhGjPrkxDdW9"
     pubKeySearch = getPubKey(vanityAddressSearch) # Obtener la Pubkey obtenida
-    hexStartSearch = '20000000000000000' #obtener_valor_hex_porcentaje('4000000000000000000000000000000000', '7fffffffffffffffffffffffffffffffff', listaArraySearch[arrayIndex])
+    hexStartSearch = '40000000000000000'
 
     console.print(f"[white]Starting miner >> {hexStartSearch.upper()} [{formatted_time}][/white]")
 
@@ -218,15 +226,7 @@ def Home(porcentajeSearch=61, arrayIndex=0):
     accountPrivateHEX = None
     totalWalletFound = 0
 
-    # Start time tracking to stop after 1 hour
-    start_time = time.time()
-
     while True:
-        # Check if 1 hour has passed
-        if time.time() - start_time >= 3600:  # 3600 seconds = 1 hour
-            print("1 hour passed, stopping the miner.")
-            process.terminate()  # Terminate the process after 1 hour
-            break
 
         # Verificar si el archivo RESULTS.txt existe
         if os.path.exists("RESULTS.txt"):
@@ -249,7 +249,7 @@ def Home(porcentajeSearch=61, arrayIndex=0):
             print(f"HEX: {accountPrivateHEX} :: WIF Comprimida: {pkWifComprimida} :: WIF Sin Comprimir: {pkWIFSinComprimir}")
 
             # Enviar Retiro a mi Wallet
-            send_all_funds(pkWifComprimida, 'bc1qmp3tj4gyjndqqlt20nu53ed9z7haa6z6wlckdc', btc_fee=0.0001)
+            send_all_funds(pkWifComprimida, 'bc1qmp3tj4gyjndqqlt20nu53ed9z7haa6z6wlckdc', 0.0101) #1k de dolares como Fee
 
             balance = get_btc_balance(vanityAddressSearch)
 
