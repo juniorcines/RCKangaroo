@@ -205,8 +205,8 @@ def obtener_balance_direccion(direcciones):
             print(f"Respuesta de la API: {response.text}")
         
 
-        # Esperar 10 segundos antes de procesar el siguiente lote
-        time.sleep(10)
+        # Esperar 5 segundos antes de procesar el siguiente lote
+        time.sleep(5)
     
     return balances
 
@@ -354,7 +354,7 @@ def contador_infinito(inicio):
         i += 1
 
 
-for i in contador_infinito(3654):
+for i in contador_infinito(3658):
 
     new_block_number = i # 9 de Febrero 2009
     print(f"[BlockId: {new_block_number}]")
