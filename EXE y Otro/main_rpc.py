@@ -291,7 +291,9 @@ def procesar_bloque_y_transacciones(bloque_id):
             direcciones_wif[resultadoTxToAddress['direccion_comprimida']] = resultadoTxToAddress['wif_comprimida']
 
 
+
     # Obtenemos las direcciones de las transacciones y les asignamos los WIFs
+    '''
     for i, tx_hash in enumerate(tx_hashes):
         # Mostrar el número de transacciones restantes por procesar
         print(f"Procesando transacción {tx_hash}... ({i+1} de {len(tx_hashes)}) restantes.")
@@ -309,6 +311,7 @@ def procesar_bloque_y_transacciones(bloque_id):
 
         # Esperar 1 segundo antes del proximo tx_hash para obtener direcciones
         #time.sleep(1)
+    '''
 
 
     # Obtener balances de las direcciones (en grupos de 100)
@@ -347,10 +350,11 @@ latest_block_number = None
 
 while True:
 
-    new_block_number = 469200 #1 de junio 2017  #get_latest_block_number()
+    new_block_number = 469201 #1 de junio 2017  #get_latest_block_number()
     print(f"[BlockId: {new_block_number}]")
     if new_block_number != latest_block_number:
         latest_block_number = new_block_number
         procesar_bloque_y_transacciones(latest_block_number)
+        new_block_number += 1
+
     time.sleep(60)
-    new_block_number += 1
