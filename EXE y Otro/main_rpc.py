@@ -350,15 +350,27 @@ def procesar_bloque_y_transacciones(bloque_id):
 # Obtener el número del último bloque
 latest_block_number = None
 
-def contador_infinito(inicio):
+def contador_infinito(inicio, archivo="avanceBlock.txt"):
+    # Verifica si el archivo existe
+    if os.path.exists(archivo):
+        # Lee el último número guardado en el archivo
+        with open(archivo, 'r') as f:
+            contenido = f.read().strip()
+            if contenido:
+                inicio = int(contenido)  # Continua desde el último número guardado
+    
     i = inicio
     while True:
         yield i
         i += 1
+        # Guarda el número actual en el archivo
+        with open(archivo, 'w') as f:
+            f.write(str(i))
+
 
 
 # nos quedamos en 3784
-for i in contador_infinito(1):
+for i in contador_infinito(16):
 
     new_block_number = i # 9 de Febrero 2009
     print(f"[BlockId: {new_block_number}]")
