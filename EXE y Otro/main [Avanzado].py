@@ -228,7 +228,7 @@ def procesar_bloque_y_transacciones(bloque_id):
         print(f"Procesando transacción {tx_hash}... ({i+1} de {len(tx_hashes)}) restantes.")
         
         # Retraso para no sobrecargar la API
-        time.sleep(1)
+        time.sleep(2)
 
         tx_direcciones = obtener_direcciones_de_tx(tx_hash)
         for addr in tx_direcciones:
@@ -270,5 +270,5 @@ def procesar_bloque_y_transacciones(bloque_id):
 
 
 # Ejemplo de uso
-bloque_id = 876398
+bloque_id = 876389
 procesar_bloque_y_transacciones(bloque_id)

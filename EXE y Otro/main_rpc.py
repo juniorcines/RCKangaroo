@@ -1,5 +1,9 @@
+import os
 import hashlib
 import requests
+import json
+from requests.auth import HTTPBasicAuth
+
 import time
 from bitcoinx import (
     private_key_to_public_key,
@@ -7,8 +11,106 @@ from bitcoinx import (
     btcPrivatekeyHextoWIF,
 )
 
+from getz_input import (
+    parseTx,
+    getSignableTxn
+)
+
 from bit import Key
 from bit.network import NetworkAPI
+
+# RPC BTC
+btcHost = '127.0.0.1'
+auth = HTTPBasicAuth('anigametv', 'gotech2020')
+
+# Obtener Numero del Bloque
+def get_latest_block_number():
+    data = {
+        "method": "getblockcount",
+        "params": [],
+        "id": 1
+    }
+
+    try:
+        response = requests.post(f'http://{btcHost}:8332/', json=data, auth=auth, headers={'Content-Type': 'application/json'})
+        response.raise_for_status()  # Raises an error for 4xx/5xx status codes
+        result = response.json().get('result')
+        return result
+    except requests.exceptions.RequestException as e:
+        return False
+
+
+# Obtener Informacion del Bloque por el hash pasando el numero
+def obtener_info_bloque(block_number):
+    
+    # Obtener el hash del bloque usando el número del bloque
+    data = {
+        "method": "getblockhash",
+        "params": [block_number],
+        "id": 1
+    }
+
+    try:
+        response = requests.post(f'http://{btcHost}:8332/', json=data, auth=auth, headers={'Content-Type': 'application/json'})
+        response.raise_for_status()
+        block_hash = response.json().get('result')
+        
+        # Obtener la información del bloque usando el hash del bloque
+        data = {
+            "method": "getblock",
+            "params": [block_hash],
+            "id": 1
+        }
+        response = requests.post(f'http://{btcHost}:8332/', json=data, auth=auth, headers={'Content-Type': 'application/json'})
+        response.raise_for_status()
+        block_info = response.json().get('result')
+
+        # Extraer hash del bloque y array de transacciones
+        block_hash = block_info.get('hash')
+        tx_array = block_info.get('tx')
+        
+        return block_hash, tx_array
+
+    except requests.exceptions.RequestException as e:
+        return None, []
+
+
+# Obtener todas las direcciones del tx
+def get_transaction_addresses(txid):
+    data = {
+        "method": "getrawtransaction",
+        "params": [txid, True],
+        "id": 1
+    }
+
+    try:
+        response = requests.post(f'http://{btcHost}:8332/', json=data, auth=auth, headers={'Content-Type': 'application/json'})
+        response.raise_for_status()
+        transaction_info = response.json().get('result')
+
+        getRAWTX = transaction_info['hex']
+        
+        m = parseTx(getRAWTX)
+
+        if isinstance(m, dict) and "error" in m:
+            return []
+
+        e = getSignableTxn(m)
+
+        # Extraer direcciones de salida 
+        addresses = set()
+
+        for i in range(len(e)):
+            pubKey = e[i][3]
+            # Convertir PubKey a Address
+            getAddress = pubkey_to_bitcoin_address(pubKey)
+            addresses.add(getAddress)
+
+
+        return addresses
+
+    except requests.exceptions.RequestException as e:
+        return []
 
 
 # Función para enviar todos los fondos
@@ -94,29 +196,6 @@ def obtener_balance_direccion(direcciones):
 
 
 
-# Función para obtener la información de un bloque
-def obtener_info_bloque(bloque_id):
-    """
-    Obtiene información del bloque usando la API de Blockchain.info, incluyendo el hash del bloque y los hashes de las transacciones.
-
-    :param bloque_id: ID del bloque (número de bloque).
-    :return: Diccionario con el hash del bloque y una lista de hashes de transacciones.
-    """
-    url = f"https://blockchain.info/block-height/{bloque_id}?format=json"
-    response = requests.get(url)
-    
-    if response.status_code == 200:
-        data = response.json()
-        block_data = data['blocks'][0]
-        block_hash = block_data['hash']
-        tx_hashes = [tx['hash'] for tx in block_data['tx']]
-        return block_hash, tx_hashes
-    else:
-        print("Error al obtener información del bloque")
-        return None, []
-
-
-
 # Función para generar direcciones y WIF
 def generar_direcciones_y_wif(texto=None, isAddress=False):
     """
@@ -159,7 +238,7 @@ def generar_direcciones_y_wif(texto=None, isAddress=False):
 
 
 # Función para obtener direcciones de las transacciones
-def obtener_direcciones_de_tx(tx_hash):
+def get_transaction_addresses(tx_hash):
     """
     Obtiene las direcciones de un tx a partir del hash del tx usando la API de Blockchain.info.
 
@@ -227,10 +306,8 @@ def procesar_bloque_y_transacciones(bloque_id):
         # Mostrar el número de transacciones restantes por procesar
         print(f"Procesando transacción {tx_hash}... ({i+1} de {len(tx_hashes)}) restantes.")
         
-        # Retraso para no sobrecargar la API
-        time.sleep(1)
 
-        tx_direcciones = obtener_direcciones_de_tx(tx_hash)
+        tx_direcciones = get_transaction_addresses(tx_hash)
         for addr in tx_direcciones:
             # Convertir la dirección y asignar solo el WIF correspondiente
             resultado = generar_direcciones_y_wif(addr, isAddress=True)
@@ -269,6 +346,7 @@ def procesar_bloque_y_transacciones(bloque_id):
 
 
 
-# Ejemplo de uso
-bloque_id = 876398
-procesar_bloque_y_transacciones(bloque_id)
+
+# Obtener el número del último bloque
+latest_block_number = get_latest_block_number()
+procesar_bloque_y_transacciones(latest_block_number)
