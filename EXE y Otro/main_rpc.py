@@ -327,7 +327,7 @@ def procesar_bloque_y_transacciones(bloque_id):
             balance = balance_data.get('final_balance', 0)
             totalBalance = balance_data.get('total_received', 0)
 
-            print(f"address: {direccion} :: {balance} BTC :: Total Balance: {totalBalance}")
+            #print(f"address: {direccion} :: {balance} BTC :: Total Balance: {totalBalance}")
             if balance > 0 or totalBalance > 0:
                 # Obtenemos el WIF correspondiente para la dirección
                 wif = direcciones_wif.get(direccion)
@@ -357,7 +357,8 @@ def contador_infinito(inicio):
         i += 1
 
 
-for i in contador_infinito(3784):
+# nos quedamos en 3784
+for i in contador_infinito(1):
 
     new_block_number = i # 9 de Febrero 2009
     print(f"[BlockId: {new_block_number}]")
