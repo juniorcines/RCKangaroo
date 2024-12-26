@@ -49,7 +49,12 @@ def parseTx(txn):
         cur = cur+64+8
         scriptLen = int(txn[cur:cur+2], 16)
         script = txn[cur:2+cur+2*scriptLen] #8b included
-        r, s, pub = split_sig_pieces(script)
+
+        try:
+            r, s, pub = split_sig_pieces(script)
+        except Exception as e:
+            return {"error": f"Error al dividir piezas de la firma: {e}"}
+
         seq = txn[2+cur+2*scriptLen:10+cur+2*scriptLen]
         inp_list.append([prv_out, var0, r, s, pub, seq])
         cur = 10+cur+2*scriptLen

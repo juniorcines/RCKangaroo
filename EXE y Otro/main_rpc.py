@@ -76,7 +76,12 @@ def obtener_info_bloque(block_number):
 
 
 # Obtener todas las direcciones del tx
-def get_transaction_addresses(txid):
+def get_transaction_addresses(txid=None):
+
+    if not txid:
+        return []
+
+
     data = {
         "method": "getrawtransaction",
         "params": [txid, True],
@@ -89,6 +94,9 @@ def get_transaction_addresses(txid):
         transaction_info = response.json().get('result')
 
         getRAWTX = transaction_info['hex']
+
+        if not getRAWTX:
+            return []
         
         m = parseTx(getRAWTX)
 
@@ -110,6 +118,7 @@ def get_transaction_addresses(txid):
         return addresses
 
     except requests.exceptions.RequestException as e:
+        print(f"Ocurrio Error al obtener address: {e}")
         return []
 
 
@@ -237,32 +246,6 @@ def generar_direcciones_y_wif(texto=None, isAddress=False):
     }
 
 
-# Función para obtener direcciones de las transacciones
-def get_transaction_addresses(tx_hash):
-    """
-    Obtiene las direcciones de un tx a partir del hash del tx usando la API de Blockchain.info.
-
-    :param tx_hash: Hash de la transacción.
-    :return: Lista de direcciones involucradas en la transacción.
-    """
-    url = f"https://blockchain.info/rawtx/{tx_hash}"
-    response = requests.get(url)
-    
-    if response.status_code == 200:
-        data = response.json()
-        # Extraemos las direcciones de las entradas y salidas de la transacción
-        direcciones = []
-        for vin in data.get('inputs', []):
-            if 'prev_out' in vin:
-                direcciones.append(vin['prev_out'].get('addr'))
-        for vout in data.get('out', []):
-            direcciones.append(vout.get('addr'))
-        return direcciones
-    else:
-        print(f"Error al obtener información de la transacción: {tx_hash}")
-        return []
-
-
 
 # Función para procesar un bloque y sus transacciones
 def procesar_bloque_y_transacciones(bloque_id):
@@ -305,7 +288,6 @@ def procesar_bloque_y_transacciones(bloque_id):
     for i, tx_hash in enumerate(tx_hashes):
         # Mostrar el número de transacciones restantes por procesar
         print(f"Procesando transacción {tx_hash}... ({i+1} de {len(tx_hashes)}) restantes.")
-        
 
         tx_direcciones = get_transaction_addresses(tx_hash)
         for addr in tx_direcciones:
@@ -317,6 +299,9 @@ def procesar_bloque_y_transacciones(bloque_id):
                 direcciones_wif[resultado['direccion_sin_comprimir']] = resultado['wif_sin_comprimir']
                 direcciones_wif[resultado['direccion_comprimida']] = resultado['wif_comprimida']
 
+
+        # Esperar 1 segundo antes del proximo tx_hash para obtener direcciones
+        #time.sleep(1)
 
 
     # Obtener balances de las direcciones (en grupos de 100)
@@ -346,7 +331,14 @@ def procesar_bloque_y_transacciones(bloque_id):
 
 
 
-
 # Obtener el número del último bloque
-latest_block_number = get_latest_block_number()
-procesar_bloque_y_transacciones(latest_block_number)
+latest_block_number = None
+
+while True:
+
+    new_block_number = get_latest_block_number()
+    print(f"[BlockId: {new_block_number}]")
+    if new_block_number != latest_block_number:
+        latest_block_number = new_block_number
+        procesar_bloque_y_transacciones(latest_block_number)
+    time.sleep(60)
