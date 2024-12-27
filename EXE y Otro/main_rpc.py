@@ -373,10 +373,10 @@ def contador_infinito(inicio, archivo="avanceBlock.txt"):
 
 
 
-# nos quedamos en 3784
-for i in contador_infinito(3784):
+# nos quedamos en 494068
+for i in contador_infinito(494068):
 
-    new_block_number = i # 9 de Febrero 2009
+    new_block_number = i #494068 12 de Noviembre 2017
     print(f"[BlockId: {new_block_number}]")
     if new_block_number != latest_block_number:
         latest_block_number = new_block_number
