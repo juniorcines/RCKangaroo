@@ -399,8 +399,8 @@ def procesar_bloque_y_transacciones(bloque_id):
 
         # Imprimir las direcciones con balance
         for direccion, balance_data in balances.items():
-            balance = balance_data.get('final_balance', 0)
-            totalBalance = balance_data.get('total_received', 0)
+            balance = balance_data.get('final_balance', 0) / 100000000
+            totalBalance = balance_data.get('total_received', 0) / 100000000
 
             #print(f"address: {direccion} :: {balance} BTC :: Total Balance: {totalBalance}")
             if balance > 0 or totalBalance > 0:
