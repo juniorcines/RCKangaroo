@@ -49,6 +49,25 @@ def guardar_datos(address, wif):
     conn.close()
 
 
+# Función para obtener todas las addresses
+def obtener_todas_las_addresses():
+    # Conectar a la base de datos local
+    conn = sqlite3.connect('datos.db')
+    cursor = conn.cursor()
+    
+    # Obtener todas las addresses de la tabla
+    cursor.execute('''
+    SELECT address FROM datos
+    ''')
+    resultados = cursor.fetchall()
+    
+    # Cerrar la conexión
+    conn.close()
+    
+    # Convertir el resultado en un array de addresses
+    addresses = [resultado[0] for resultado in resultados]
+    return addresses
+
 
 # Función para buscar el wif por address
 def buscar_wif_por_address(address):
