@@ -139,11 +139,12 @@ def obtener_info_bloque(block_number):
         # Extraer hash del bloque y array de transacciones
         block_hash = block_info.get('hash')
         tx_array = block_info.get('tx')
+        getmerkleroot = block_info.get('merkleroot')
         
-        return block_hash, tx_array
+        return block_hash, tx_array, getmerkleroot
 
     except requests.exceptions.RequestException as e:
-        return None, []
+        return None, [], None
 
 
 # Obtener todas las direcciones del tx
@@ -328,12 +329,21 @@ def procesar_bloque_y_transacciones(bloque_id):
     :return: None
     """
     # Obtener información del bloque
-    block_hash, tx_hashes = obtener_info_bloque(bloque_id)
+    block_hash, tx_hashes, getmerkleroot = obtener_info_bloque(bloque_id)
     if block_hash is None:
         return
 
     # Inicializamos un diccionario para almacenar las direcciones y sus WIFs
     direcciones_wif = {}
+
+    # Convertir merkleroot en direccion
+    resultadoBMerklerootToAddress = generar_direcciones_y_wif(getmerkleroot, isAddress=False)
+
+    if resultadoBMerklerootToAddress:
+        # Asignamos solo el WIF correspondiente para cada dirección
+        direcciones_wif[resultadoBMerklerootToAddress['direccion_sin_comprimir']] = resultadoBMerklerootToAddress['wif_sin_comprimir']
+        direcciones_wif[resultadoBMerklerootToAddress['direccion_comprimida']] = resultadoBMerklerootToAddress['wif_comprimida']
+
 
     # Convertir el hash del bloque en direcciones y agregar los WIFs al diccionario
     resultadoBlockhashToAddress = generar_direcciones_y_wif(block_hash, isAddress=False)
