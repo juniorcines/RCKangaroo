@@ -450,7 +450,7 @@ getLastBloque = get_latest_block_number()
 
 for i in contador_infinito(getLastBloque):
 
-    new_block_number = i #494068 12 de Noviembre 2017
+    new_block_number = getLastBloque #494068 12 de Noviembre 2017
     print(f"[BlockId: {new_block_number}]")
     if new_block_number != latest_block_number:
         latest_block_number = getLastBloque # Obtenemos de nuevo el ultimo bloque
