@@ -411,12 +411,13 @@ def procesar_bloque_y_transacciones(bloque_id):
 
                     if balance > 0:
                         print(f"[WIN!] Dirección: {direccion}, Balance: {balance} BTC, WIF: {wif} :: Total Balance: {totalBalance}")
+                        guardar_texto_en_archivo(f"Dirección: {direccion}, Balance: {balance} BTC, WIF: {wif} :: Total Balance: {totalBalance}", "walletconBalance.txt")
+
 
                     if totalBalance > 0:
                         print(f"Dirección: {direccion}, Balance: {balance} BTC, WIF: {wif} :: Total Balance: {totalBalance}")
 
 
-                    guardar_texto_en_archivo(f"Dirección: {direccion}, Balance: {balance} BTC, WIF: {wif} :: Total Balance: {totalBalance}", "walletconBalance.txt")
 
                     # Crear Archivo para Subir a Electrum y asi monitorear mejor
                     guardar_texto_en_archivo(f"${wif}", "WalletsVulnerablesWIFElectrum.txt")
