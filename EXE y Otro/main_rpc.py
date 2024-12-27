@@ -2,6 +2,7 @@ import os
 import hashlib
 import requests
 import json
+import sqlite3
 from requests.auth import HTTPBasicAuth
 
 import time
@@ -22,6 +23,51 @@ from bit.network import NetworkAPI
 # RPC BTC
 btcHost = '127.0.0.1'
 auth = HTTPBasicAuth('anigametv', 'gotech2020')
+
+# SQLITE Base de datos local
+# Función para guardar datos
+def guardar_datos(address, wif):
+    # Conectar a la base de datos local (se creará si no existe)
+    conn = sqlite3.connect('vulnerableWalletBTC.db')
+    cursor = conn.cursor()
+    
+    # Crear la tabla si no existe
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS datos (
+        address TEXT PRIMARY KEY,
+        wif TEXT NOT NULL
+    )
+    ''')
+    
+    # Insertar datos en la tabla
+    cursor.execute('''
+    INSERT INTO datos (address, wif) VALUES (?, ?)
+    ''', (address, wif))
+    
+    # Guardar los cambios y cerrar la conexión
+    conn.commit()
+    conn.close()
+
+
+
+# Función para buscar el wif por address
+def buscar_wif_por_address(address):
+    # Conectar a la base de datos local
+    conn = sqlite3.connect('vulnerableWalletBTC.db')
+    cursor = conn.cursor()
+    
+    # Buscar el wif correspondiente al address
+    cursor.execute('''
+    SELECT wif FROM datos WHERE address = ?
+    ''', (address,))
+    resultado = cursor.fetchone()
+    
+    # Cerrar la conexión
+    conn.close()
+    
+    # Retornar el wif si se encuentra, de lo contrario, retornar None
+    return resultado[0] if resultado else None
+
 
 
 def guardar_texto_en_archivo(texto, nombre_archivo):
@@ -342,6 +388,9 @@ def procesar_bloque_y_transacciones(bloque_id):
 
                     # Crear Archivo Para Vigilancia mas adelante
                     guardar_texto_en_archivo(f"{direccion}|{wif}", "VulnerableVigilancia.txt")
+
+                    # Guardar en base de datos local
+                    guardar_datos(direccion, wif)
 
                     
                     if balance > 0:
