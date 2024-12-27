@@ -444,11 +444,17 @@ def contador_infinito(inicio, archivo="avanceBlock.txt"):
 
 
 
-# nos quedamos en 494068
-for i in contador_infinito(494068):
+# nos quedamos en 494071
+# comenzaremos desde el bloque actual
+getLastBloque = get_latest_block_number()
+
+for i in contador_infinito(getLastBloque):
 
     new_block_number = i #494068 12 de Noviembre 2017
     print(f"[BlockId: {new_block_number}]")
     if new_block_number != latest_block_number:
-        latest_block_number = new_block_number
+        latest_block_number = getLastBloque # Obtenemos de nuevo el ultimo bloque
         procesar_bloque_y_transacciones(latest_block_number)
+
+        # Esperamos 2 minutos
+        time.sleep(2 * 60)
