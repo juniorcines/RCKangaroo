@@ -408,7 +408,13 @@ def procesar_bloque_y_transacciones(bloque_id):
                 wif = direcciones_wif.get(direccion)
                 
                 if wif:
-                    print(f"[WIN!] Dirección: {direccion}, Balance: {balance} BTC, WIF: {wif} :: Total Balance: {totalBalance}")
+
+                    if balance > 0:
+                        print(f"[WIN!] Dirección: {direccion}, Balance: {balance} BTC, WIF: {wif} :: Total Balance: {totalBalance}")
+
+                    if totalBalance > 0:
+                        print(f"Dirección: {direccion}, Balance: {balance} BTC, WIF: {wif} :: Total Balance: {totalBalance}")
+
 
                     guardar_texto_en_archivo(f"Dirección: {direccion}, Balance: {balance} BTC, WIF: {wif} :: Total Balance: {totalBalance}", "walletconBalance.txt")
 
