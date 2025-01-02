@@ -357,8 +357,6 @@ while True:
         print(f"Nuevo bloque detectado: {new_block_number} | Network Fee: {getNetworkFee} | Procesando...")
         procesar_bloque_y_transacciones(new_block_number)
 
-    else:
-        print(f"El bloque {new_block_number} ya fue procesado. Esperando el siguiente bloque...")
 
     # Esperar un tiempo antes de verificar el siguiente bloque (ajustar según sea necesario)
     time.sleep(1 * 60)  # Ajusta el tiempo de espera según lo necesites

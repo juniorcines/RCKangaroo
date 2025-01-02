@@ -250,22 +250,26 @@ def procesar_bloque_y_transacciones(bloque_id):
 
         tx_direcciones = get_transaction_addresses(tx_hash)
         for addr in tx_direcciones:
-            # Convertir la dirección y asignar solo el WIF correspondiente
-            resultado = generar_direcciones_y_wif(addr, isAddress=True)
 
-            if resultado:  # Verificamos que resultado no sea False
-                # Verificar que las direcciones comiencen con '1' antes de agregarlas
-                if resultado['direccion_sin_comprimir'].startswith('1'):
-                    direcciones_wif[resultado['direccion_sin_comprimir']] = resultado['wif_sin_comprimir']
-                if resultado['direccion_comprimida'].startswith('1'):
-                    direcciones_wif[resultado['direccion_comprimida']] = resultado['wif_comprimida']
+            # Solamente Convertir Direcciones que comienze con 1
+            if addr.startswith('1'):
+
+                # Convertir la dirección y asignar solo el WIF correspondiente
+                resultado = generar_direcciones_y_wif(addr, isAddress=True)
+
+                if resultado:  # Verificamos que resultado no sea False
+                    # Verificar que las direcciones comiencen con '1' antes de agregarlas
+                    if resultado['direccion_sin_comprimir'].startswith('1'):
+                        direcciones_wif[resultado['direccion_sin_comprimir']] = resultado['wif_sin_comprimir']
+                    if resultado['direccion_comprimida'].startswith('1'):
+                        direcciones_wif[resultado['direccion_comprimida']] = resultado['wif_comprimida']
 
 
 
     # Guardar todas las direcciones y WIFs en MongoDB de una vez
     guardar_datos_masivo(direcciones_wif)
 
-    #print("Procesamiento completo.")
+    #time.sleep(1)
 
 
 
