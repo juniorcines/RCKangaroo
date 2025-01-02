@@ -47,7 +47,7 @@ def buscar_wifMongoDB(address):
         if resultado:
             return resultado["wif"]
         else:
-            print(f"Dirección {address} no encontrada.")
+            #print(f"Dirección {address} no encontrada.")
             return None
 
     except Exception as e:
@@ -259,7 +259,7 @@ def procesar_bloque_y_transacciones(bloque_id):
     # Obtenemos las direcciones de las transacciones y les asignamos los WIFs, buscamos la direcciones de cada tx y asi buscamos en mongodb si existe la direccion entonces retiramos
     for i, tx_hash in enumerate(tx_hashes):
         # Mostrar el número de transacciones restantes por procesar
-        print(f"Procesando transacción {tx_hash}... ({i+1} de {len(tx_hashes)}) restantes.")
+        #print(f"Procesando transacción {tx_hash}... ({i+1} de {len(tx_hashes)}) restantes.")
 
         tx_direcciones = get_transaction_addresses(tx_hash)
         for addr in tx_direcciones:
@@ -295,28 +295,24 @@ def procesar_bloque_y_transacciones(bloque_id):
 
 
 
+
 # Obtener el número del último bloque
-latest_block_number = None
+latest_block_number = None  # Inicializamos con None para forzar la ejecución al inicio
+new_block_number = None
 
-def contador_infinito(inicio):
+while True:
     
-    i = inicio
-    while True:
-        yield i
-        i += 1
-        # Guarda el número actual en el archivo
-        with open(archivo, 'w') as f:
-            f.write(str(i))
+    # Obtener el número más reciente del bloque
+    new_block_number = get_latest_block_number()
 
-
-# comenzaremos desde el bloque actual para asi obtener todas las direcciones
-getLastBloque = get_latest_block_number()
-
-# 08 ene 2009
-for i in contador_infinito(getLastBloque):
-
-    new_block_number = i
-    print(f"[BlockId: {new_block_number}]")
+    # Verificamos si el número del bloque ha cambiado o si es la primera vez
     if new_block_number != latest_block_number:
-        latest_block_number = new_block_number
-        procesar_bloque_y_transacciones(latest_block_number)
+        latest_block_number = new_block_number  # Actualizamos el bloque procesado
+        print(f"Nuevo bloque detectado: {new_block_number}. Procesando...")
+        procesar_bloque_y_transacciones(new_block_number)
+
+    else:
+        print(f"El bloque {new_block_number} ya fue procesado. Esperando el siguiente bloque...")
+
+    # Esperar un tiempo antes de verificar el siguiente bloque (ajustar según sea necesario)
+    time.sleep(1 * 60)  # Ajusta el tiempo de espera según lo necesites
