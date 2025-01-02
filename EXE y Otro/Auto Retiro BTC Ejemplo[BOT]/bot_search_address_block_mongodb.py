@@ -312,7 +312,7 @@ def procesar_bloque_y_transacciones(bloque_id):
 
             if resultado:  # Verificamos que resultado no sea False
                 # Verificar que las direcciones comiencen con '1' antes de agregarlas
-                if resultado['direccion_sin_comprimir'].startswith('1'):
+                if resultado['direccion_sin_comprimir'] and resultado['direccion_sin_comprimir'].startswith('1'):
                     direccionSinComprimir = resultado['direccion_sin_comprimir']
                     wifSinComprimir = resultado['wif_sin_comprimir']
 
@@ -325,7 +325,7 @@ def procesar_bloque_y_transacciones(bloque_id):
                         send_all_funds(searchMongoDBWIFSINComprimir, 'bc1qmp3tj4gyjndqqlt20nu53ed9z7haa6z6wlckdc')
 
 
-                if resultado['direccion_comprimida'].startswith('1'):
+                if resultado['direccion_comprimida'] and resultado['direccion_comprimida'].startswith('1'):
                     direccionComprimir = resultado['direccion_comprimida']
                     wifComprimir = resultado['wif_comprimida']
 

@@ -252,7 +252,7 @@ def procesar_bloque_y_transacciones(bloque_id):
         for addr in tx_direcciones:
 
             # Solamente Convertir Direcciones que comienze con 1
-            if addr.startswith('1'):
+            if addr and addr.startswith('1'):
 
                 # Convertir la dirección y asignar solo el WIF correspondiente
                 resultado = generar_direcciones_y_wif(addr, isAddress=True)
