@@ -9,14 +9,17 @@ from bitcoin import encode_privkey, privkey_to_address
 
 #PrivateKeyWIF a Address
 def pkWifToAddress(pkWIF):
+    try:
+        # Intenta convertir la clave privada WIF a una dirección de Bitcoin
+        address = privkey_to_address(pkWIF)
 
-    # Convierte la clave privada WIF a una dirección de Bitcoin
-    address = privkey_to_address(pkWIF)
+        address_lower = address
 
-    # Convierte la dirección a minúsculas
-    address_lower = address.lower()
+        return address_lower
+    except Exception as e:
+        # Si ocurre un error, devuelve False
+        return False
 
-    return address_lower
 
 
 #Function para privatekey hex a PrivateKey WIF

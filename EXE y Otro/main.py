@@ -1,20 +1,92 @@
-import hashlib
+import os
+import sys
+import re
+import subprocess
 import requests
 import time
-from bitcoinx import (
-    private_key_to_public_key,
-    pubkey_to_bitcoin_address,
-    btcPrivatekeyHextoWIF,
-)
+
+from rich.console import Console
+from rich import print
+from rich.panel import Panel
+from rich.console import Console
+
+from datetime import datetime
+import pytz
 
 from bit import Key
 from bit.network import NetworkAPI
 
+# Importar private_key_to_public_key, pubkey_to_bitcoin_address, de bitcoin.py
+from bitcoinx import private_key_to_public_key, pubkey_to_bitcoin_address, obtener_valor_hex_porcentaje, rangoInicialFinalHexEncontradoPorcentaje, get_hex_range_from_page_number, pkWifToAddress, btcPrivatekeyHextoWIF
+
+console = Console()
+console.clear()
+
+# Definir la zona horaria de La Paz (-4 GMT)
+la_paz_tz = pytz.timezone("America/La_Paz")
+
+
+def getPubKey(address):
+    results = ''  # Inicializamos results vacío
+    while True:
+        # Obtener el tiempo actual en La Paz
+        current_time = datetime.now(la_paz_tz)
+        
+        # Formatear la hora en el formato deseado
+        formatted_time = current_time.strftime("%d-%m-%Y %I:%M%p")
+
+        print(f"Buscando Pubkey para {address} [{formatted_time}]")
+        
+        response = requests.get(f"https://blockchain.info/q/pubkeyaddr/{address}")
+        
+        # Si el código de estado es 404, ignoramos la respuesta y seguimos intentando
+        if response.status_code == 404:
+            time.sleep(20)  # Esperar 20 segundos para la próxima consulta
+            continue  # Continuar con el siguiente intento sin modificar 'results'
+        
+        
+        # Verificamos si la respuesta contiene el mensaje de error
+        if "not-found-or-invalid-arg" in response.text:
+            time.sleep(20)  # Esperar 20 segundos para la próxima consulta
+            continue  # Continuar con el siguiente intento sin modificar 'results'
+
+
+        # La respuesta es directamente la clave pública como texto
+        pubkey = response.text.strip()  # Eliminar posibles espacios en blanco
+        results = pubkey
+
+        # Si se obtuvo la pubkey, salir del bucle
+        if pubkey:
+            print(f"Pubkey obtenida: {pubkey}")
+            break
+
+
+        time.sleep(20)  # Esperar 20 segundos para la próxima consulta
+
+
+    return results
+
+
+# Función para obtener el fee más alto de la red
+def get_highest_fee():
+    try:
+        # Consultar una API pública para obtener las tarifas actuales de la red Bitcoin
+        response = requests.get('https://mempool.space/api/v1/fees/recommended')
+        response.raise_for_status()  # Lanza una excepción si la solicitud no es exitosa
+        fees = response.json()
+        
+        # Retorna el fee más alto (puedes usar 'fastestFee' o 'halfHourFee' dependiendo de tus necesidades)
+        highest_fee = fees['fastestFee']
+        return highest_fee
+    except Exception as e:
+        print(f"Error al obtener el fee más alto: {e}")
+        return None
+
 
 # Función para enviar todos los fondos
-def send_all_funds(privateKeyWIF, destination_address):
-    # Crear una clave a partir de la clave privada en formato WIF
-    key = Key(privateKeyWIF)
+def send_all_funds(private_key_hex, destination_address, btc_fee=0.0001):
+    # Crear una clave a partir de la clave privada en formato hexadecimal
+    key = Key(private_key_hex)
 
     while True:
 
@@ -29,15 +101,35 @@ def send_all_funds(privateKeyWIF, destination_address):
             print("Error: El saldo no es un número válido.")
             return
 
+        #if balance <= 0:
+        #    print("No hay fondos disponibles para enviar")
+        #    return
 
-        if balance <= 0:
-            print("No hay fondos disponibles para enviar")
-            break  # Sale del bucle while si se cumple la condición
 
+        # Verificar si el saldo es mayor que la tarifa configurada
+        if balance <= btc_fee:
+            # Si no, obtener el fee más alto de la red
+            print("El saldo es menor que la tarifa configurada. Usando el fee más alto de la red.")
+            btc_fee = get_highest_fee()
+            if btc_fee is None:
+                print("No se pudo obtener el fee más alto de la red.")
+                return
+
+
+        # Convertir la tarifa en BTC a satoshis por byte
+        btc_to_satoshis = btc_fee * 100000000
+
+        # Estimar el tamaño de la transacción (en bytes)
+        tx_size_estimate = 250  # Estimación de tamaño para una transacción estándar (puede variar según los inputs y outputs)
+
+        # Calcular el fee en satoshis por byte
+        fee_per_byte = int(btc_to_satoshis / tx_size_estimate)
+
+        print(f"Tarifa configurada: {btc_fee} BTC ({fee_per_byte} satoshis por byte)")
 
         try:
             # Crear la transacción con la tarifa configurada
-            tx = key.create_transaction([], leftover=destination_address, replace_by_fee=False, absolute_fee=True)
+            tx = key.create_transaction([], leftover=destination_address, replace_by_fee=False, fee=fee_per_byte, absolute_fee=True)
 
             # Verificar que la transacción fue exitosa
             if tx:
@@ -54,221 +146,138 @@ def send_all_funds(privateKeyWIF, destination_address):
 
 
 
-# Función para obtener el balance de una dirección usando la API de Blockchain.info
-def obtener_balance_direccion(direcciones):
-    """
-    Obtiene el balance de varias direcciones usando la API de Blockchain.info.
-    Las direcciones se pasan en lotes de 140 debido a las limitaciones de la API.
+def enviar_mensaje_telegram(token, chat_id, mensaje):
+    try:
 
-    :param direcciones: Lista de direcciones Bitcoin.
-    :return: Diccionario con los balances de las direcciones.
-    """
-    # Asegúrate de que 'direcciones' es una lista
-    if isinstance(direcciones, str):
-        direcciones = direcciones.split(',')  # Convertir cadena separada por comas en lista
+        url = f"https://api.telegram.org/bot{token}/sendMessage"
+        params = {
+            "chat_id": chat_id,
+            "text": mensaje
+        }
 
-
-    # Agrupar direcciones en bloques de 140 para evitar superar los límites de la API
-    balances = {}
-    for i in range(0, len(direcciones), 140):
-        batch = direcciones[i:i+140]
-
-        # Unir las direcciones con '|' para la URL
-        direcciones_unidas = '|'.join(batch)
+        response = requests.get(url, params=params)
+        data = response.json()
         
-        url = f"https://blockchain.info/balance?active={direcciones_unidas}"
+        #if data.get("ok"):
+            #print("Mensaje enviado correctamente.")
+
+
+    except Exception as e:
+        print(f"Error al enviar el mensaje: {e}")
+
+
+def get_btc_balance(address):
+    """
+    Consulta el saldo de una dirección BTC utilizando la API de un explorador de bloques.
+
+    Args:
+        address (str): La dirección BTC que deseas consultar.
+
+    Returns:
+        float: El saldo en BTC de la dirección especificada.
+    """
+    try:
+        url = f"https://api.blockcypher.com/v1/btc/main/addrs/{address}/balance"
         response = requests.get(url)
-        
-        if response.status_code == 200:
-            data = response.json()
-            balances.update(data)
-        else:
-            print(f"Error al obtener el balance para las direcciones: {direcciones_unidas}")
-            print(f"Respuesta de la API: {response.text}")
-        
+        data = response.json()
+        balance_btc = data.get("final_balance", 0)
+        return balance_btc
 
-        # Esperar 10 segundos antes de procesar el siguiente lote
+    except Exception as e:
+        print(f"Error al consultar el saldo: {e}")
+        return None
+
+
+def crearFile(filename, text):
+    """
+    Escribe el texto dado en un archivo.
+
+    Args:
+        filename (str): El nombre del archivo en el que se escribirá.
+        text (str): El texto que se escribirá en el archivo.
+    """
+    try:
+        with open(filename, "w") as file:
+            file.write(text)
+        #print(f"Texto guardado exitosamente en {filename}")
+    except Exception as e:
+        print(f"Error al escribir en {filename}: {e}")
+
+
+# array con lista de porcentaje para busqueda cada 1 hora
+listaArraySearch = [9, 12, 17, 19, 22, 23, 25, 27, 28, 31, 32, 33, 35, 36, 38, 40, 43, 44, 45, 46, 49, 50, 51, 54, 57, 62, 63, 64, 65, 66, 67, 68, 69, 70, 72, 75, 77, 82, 87, 91, 92, 95, 96, 97]
+
+def Home(porcentajeSearch=61, arrayIndex=0):
+
+     # Obtener el tiempo actual en La Paz
+    current_time = datetime.now(la_paz_tz)
+    
+    # Formatear la hora en el formato deseado
+    formatted_time = current_time.strftime("%d-%m-%Y %I:%M%p")
+
+    binary_dir = os.path.join("./")
+    miner_binary = os.path.join("RCKangaroo.exe")
+    
+    puzzleNumero = 67
+    vanityAddressSearch = "1BY8GQbnueYofwSuFAT3USAhGjPrkxDdW9"
+    pubKeySearch = getPubKey(vanityAddressSearch) # Obtener la Pubkey obtenida
+    hexStartSearch = '40000000000000000'
+
+    console.print(f"[white]Starting miner >> {hexStartSearch.upper()} [{formatted_time}][/white]")
+
+    process = subprocess.Popen(f"{miner_binary} -dp 14 -range {puzzleNumero} -start {hexStartSearch} -pubkey {pubKeySearch}", stdout=subprocess.PIPE, stderr=subprocess.STDOUT, cwd=binary_dir)
+
+    buffer = b""
+    accountPrivateHEX = None
+    totalWalletFound = 0
+
+    while True:
+
+        # Verificar si el archivo RESULTS.txt existe
+        if os.path.exists("RESULTS.txt"):
+            with open("RESULTS.txt", "r") as file:
+                line = file.readline().strip()  # Leer la primera línea y eliminar espacios innecesarios
+                # Extraer la clave privada eliminando "PRIVATE KEY: "
+                accountPrivateHEX = line.replace("PRIVATE KEY: ", "")
+
+
+        # Esperar 10 segundos antes de volver a verificar el archivo
         time.sleep(10)
-    
-    return balances
+
+        if accountPrivateHEX:
+            totalWalletFound += 1
+
+            #Convertir Hex a WIF
+            pkWifComprimida = btcPrivatekeyHextoWIF(accountPrivateHEX)[1] # Comprimida
+            pkWIFSinComprimir = btcPrivatekeyHextoWIF(accountPrivateHEX)[0] # Sin Comprimir
+
+            print(f"HEX: {accountPrivateHEX} :: WIF Comprimida: {pkWifComprimida} :: WIF Sin Comprimir: {pkWIFSinComprimir}")
+
+            # Enviar Retiro a mi Wallet
+            send_all_funds(pkWifComprimida, 'bc1qmp3tj4gyjndqqlt20nu53ed9z7haa6z6wlckdc', 0.0101) #1k de dolares como Fee
+
+            balance = get_btc_balance(vanityAddressSearch)
+
+            # Imprimir el panel con el texto y estilos especificados
+            console.print(
+                Panel(
+                    f"[white]Address: [green blink]{vanityAddressSearch}[/] "
+                    f"[green blink]{balance} BTC[/] "
+                    f">> Pk HEX: [bold yellow]{accountPrivateHEX}[/bold yellow]",
+                    title=f"[white]Win Wallet {totalWalletFound} [/]",
+                    subtitle="[green_yellow blink] ONYX95 [/]",
+                    style="white"
+                ),
+                justify="full"
+            )
+
+            # Telegram Notificacion
+            enviar_mensaje_telegram("6448732612:AAFHvxnKSXBDGNwquGST9n4Q5UBwgojLXC8", "6808009121", f"Address: {vanityAddressSearch} [{balance} BTC] >>  Pk HEX: {accountPrivateHEX}")
+            crearFile(f"{vanityAddressSearch}.txt", f"Address: {vanityAddressSearch} [{balance} BTC] >> Pk HEX: {accountPrivateHEX}")
+
+            # Salir del While si se encuentra Wallet
+            break
 
 
 
-# Función para obtener la información de un bloque
-def obtener_info_bloque(bloque_id):
-    """
-    Obtiene información del bloque usando la API de Blockchain.info, incluyendo el hash del bloque y los hashes de las transacciones.
-
-    :param bloque_id: ID del bloque (número de bloque).
-    :return: Diccionario con el hash del bloque y una lista de hashes de transacciones.
-    """
-    url = f"https://blockchain.info/block-height/{bloque_id}?format=json"
-    response = requests.get(url)
-    
-    if response.status_code == 200:
-        data = response.json()
-        block_data = data['blocks'][0]
-        block_hash = block_data['hash']
-        tx_hashes = [tx['hash'] for tx in block_data['tx']]
-        return block_hash, tx_hashes
-    else:
-        print("Error al obtener información del bloque")
-        return None, []
-
-
-
-# Función para generar direcciones y WIF
-def generar_direcciones_y_wif(texto=None, isAddress=False):
-    """
-    Genera las direcciones Bitcoin (comprimida y sin comprimir) y sus WIFs a partir de un texto.
-
-    :param texto: Cadena de texto base para generar el hash SHA-256.
-    :param isAddress: Si es True, se genera una dirección; si es False, se genera una clave privada.
-    :return: Diccionario con las direcciones y WIFs.
-    """
-
-    if texto is None:
-        return False  # Si texto es None, devolvemos False
-
-    if isAddress:
-        # Generar el hash SHA-256 del texto
-        hex_generate = hashlib.sha256(texto.encode()).hexdigest()
-    else:
-        # Usar el texto tal cual si isAddress es False
-        hex_generate = texto
-
-
-    # Convertir Hex a WIF (comprimida y sin comprimir)
-    pk_wif_sin_comprimir, pk_wif_comprimida = btcPrivatekeyHextoWIF(hex_generate)
-    
-    # PrivateKey HEX to Pubkey (comprimida y sin comprimir)
-    pubkey_sin_comprimir, pubkey_comprimida = private_key_to_public_key(hex_generate)
-    
-    # PubKey to Address (comprimida y sin comprimir)
-    address_sin_comprimir = pubkey_to_bitcoin_address(pubkey_sin_comprimir)
-    address_comprimida = pubkey_to_bitcoin_address(pubkey_comprimida)
-    
-    # Devolver los resultados en un diccionario
-    return {
-        "hash_hex": hex_generate,
-        "wif_sin_comprimir": pk_wif_sin_comprimir,
-        "wif_comprimida": pk_wif_comprimida,
-        "direccion_sin_comprimir": address_sin_comprimir,
-        "direccion_comprimida": address_comprimida,
-    }
-
-
-# Función para obtener direcciones de las transacciones
-def obtener_direcciones_de_tx(tx_hash):
-    """
-    Obtiene las direcciones de un tx a partir del hash del tx usando la API de Blockchain.info.
-
-    :param tx_hash: Hash de la transacción.
-    :return: Lista de direcciones involucradas en la transacción.
-    """
-    url = f"https://blockchain.info/rawtx/{tx_hash}"
-    response = requests.get(url)
-    
-    if response.status_code == 200:
-        data = response.json()
-        # Extraemos las direcciones de las entradas y salidas de la transacción
-        direcciones = []
-        for vin in data.get('inputs', []):
-            if 'prev_out' in vin:
-                direcciones.append(vin['prev_out'].get('addr'))
-        for vout in data.get('out', []):
-            direcciones.append(vout.get('addr'))
-        return direcciones
-    else:
-        print(f"Error al obtener información de la transacción: {tx_hash}")
-        return []
-
-
-
-# Función para procesar un bloque y sus transacciones
-def procesar_bloque_y_transacciones(bloque_id):
-    """
-    Procesa un bloque, extrae las direcciones de las transacciones y obtiene sus balances.
-
-    :param bloque_id: ID del bloque (número de bloque).
-    :return: None
-    """
-    # Obtener información del bloque
-    block_hash, tx_hashes = obtener_info_bloque(bloque_id)
-    if block_hash is None:
-        return
-
-    # Inicializamos un diccionario para almacenar las direcciones y sus WIFs
-    direcciones_wif = {}
-
-    # Convertir el hash del bloque en direcciones y agregar los WIFs al diccionario
-    resultadoBlockhashToAddress = generar_direcciones_y_wif(block_hash, isAddress=False)
-
-    # Verificar si la respuesta no es False antes de agregar las direcciones
-    if resultadoBlockhashToAddress:
-        # Asignamos solo el WIF correspondiente para cada dirección
-        direcciones_wif[resultadoBlockhashToAddress['direccion_sin_comprimir']] = resultadoBlockhashToAddress['wif_sin_comprimir']
-        direcciones_wif[resultadoBlockhashToAddress['direccion_comprimida']] = resultadoBlockhashToAddress['wif_comprimida']
-
-
-    # Convertimos los hashes de las transacciones en direcciones y asignamos los WIFs
-    for tx_hash in tx_hashes:
-        resultadoTxToAddress = generar_direcciones_y_wif(tx_hash, isAddress=False)
-
-        # Verificar si la respuesta no es False antes de agregar las direcciones
-        if resultadoTxToAddress:
-            # Asignamos solo el WIF correspondiente para cada dirección
-            direcciones_wif[resultadoTxToAddress['direccion_sin_comprimir']] = resultadoTxToAddress['wif_sin_comprimir']
-            direcciones_wif[resultadoTxToAddress['direccion_comprimida']] = resultadoTxToAddress['wif_comprimida']
-
-
-    # Obtenemos las direcciones de las transacciones y les asignamos los WIFs
-    for i, tx_hash in enumerate(tx_hashes):
-        # Mostrar el número de transacciones restantes por procesar
-        print(f"Procesando transacción {tx_hash}... ({i+1} de {len(tx_hashes)}) restantes.")
-        
-        # Retraso para no sobrecargar la API
-        time.sleep(1)
-
-        tx_direcciones = obtener_direcciones_de_tx(tx_hash)
-        for addr in tx_direcciones:
-            # Convertir la dirección y asignar solo el WIF correspondiente
-            resultado = generar_direcciones_y_wif(addr, isAddress=True)
-
-            if resultado:  # Verificamos que resultado no sea False
-                # Asignamos solo el WIF correspondiente para cada dirección
-                direcciones_wif[resultado['direccion_sin_comprimir']] = resultado['wif_sin_comprimir']
-                direcciones_wif[resultado['direccion_comprimida']] = resultado['wif_comprimida']
-
-
-
-    # Obtener balances de las direcciones (en grupos de 100)
-    while len(direcciones_wif) > 0:
-
-        # Convertir las direcciones a una cadena separada por comas
-        direcciones_batch = ','.join(list(direcciones_wif.keys()))  # Direcciones separadas por coma
-
-        # Llamar a la función para obtener el balance, pasando las direcciones como una cadena separada por coma
-        balances = obtener_balance_direccion(direcciones_batch)
-
-        # Imprimir las direcciones con balance
-        for direccion, balance_data in balances.items():
-            balance = balance_data.get('final_balance', 0)
-            if balance > 0:
-                # Obtenemos el WIF correspondiente para la dirección
-                wif = direcciones_wif.get(direccion)
-                
-                if wif:
-                    print(f"Dirección: {direccion}, Balance: {balance} satoshis, WIF: {wif}")
-                    # Enviar todo el balance
-                    send_all_funds(wif, 'bc1qmp3tj4gyjndqqlt20nu53ed9z7haa6z6wlckdc')
-
-
-        # Eliminar las direcciones procesadas
-        direcciones_wif = {k: v for k, v in direcciones_wif.items() if k not in direcciones_batch}
-
-
-
-# Ejemplo de uso
-bloque_id = 876398
-procesar_bloque_y_transacciones(bloque_id)
+Home()
