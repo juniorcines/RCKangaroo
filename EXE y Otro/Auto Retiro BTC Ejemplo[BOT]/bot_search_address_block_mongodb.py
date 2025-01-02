@@ -222,7 +222,7 @@ def send_all_funds(privateKeyWIF, destination_address):
 
             # Verificar que la transacción fue exitosa
             if tx:
-                print(f"Transacción creada con éxito: {tx}")
+                print(f"Transacción creada con éxito: {tx} : Fee: {current_fee}")
                 # Confirmamos que el saldo ha cambiado y no hay fondos disponibles
                 balance = key.get_balance('btc')  # Actualizamos el saldo
                 print(f"Saldo actualizado: {balance} BTC")
