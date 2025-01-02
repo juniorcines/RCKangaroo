@@ -73,6 +73,37 @@ def get_latest_block_number():
 
 
 
+# Obtener el Fee de la Red
+def get_highest_fee():
+    # Establecemos el número de bloques para la estimación
+    conf_target = 1  # Queremos una confirmación en 1 bloque
+    estimate_mode = "CONSERVATIVE"  # Modo conservador para una estimación más segura
+
+    data = {
+        "method": "estimatesmartfee",
+        "params": [conf_target, estimate_mode],  # Estimación para 1 bloque
+        "id": 1
+    }
+
+    try:
+        response = requests.post(f'http://{btcHost}:8332/', json=data, auth=auth, headers={'Content-Type': 'application/json'})
+        response.raise_for_status()  # Raises an error for 4xx/5xx status codes
+        result = response.json().get('result')
+        if result and 'feerate' in result:
+            fee_in_btc_per_kb = result['feerate']  # Tarifa estimada en BTC por kB
+            fee_in_satoshis_per_kb = fee_in_btc_per_kb * 100_000_000  # Convertir a satoshis por kB
+            fee_in_satoshis_per_byte = fee_in_satoshis_per_kb / 1000  # Convertir a satoshis por byte
+            return fee_in_satoshis_per_byte  # Retorna la tarifa estimada en satoshis por byte
+        else:
+            print("No se pudo obtener la estimación de la tarifa.")
+            return None
+    except requests.exceptions.RequestException as e:
+        print(f"Error al obtener la tarifa estimada: {e}")
+        return None
+
+
+
+
 # Obtener Informacion del Bloque por el hash pasando el numero
 def obtener_info_bloque(block_number):
     
@@ -162,8 +193,13 @@ def send_all_funds(privateKeyWIF, destination_address):
     # Crear una clave a partir de la clave privada en formato WIF
     key = Key(privateKeyWIF)
 
-    while True:
+    # Definir el fee normal en satoshis por byte
+    normal_fee = get_highest_fee()  # Obtener el Fee en Satoshi por byte
 
+    fee_increment = 1  # Incremento del fee en satoshis por byte (aumenta 1 satoshi por cada transacción)
+    current_fee = normal_fee  # Iniciar con el fee normal en satoshis
+
+    while True:
         # Verificar el saldo disponible
         balance = key.get_balance('btc')
         print(f"Saldo disponible: {balance} BTC")
@@ -182,7 +218,7 @@ def send_all_funds(privateKeyWIF, destination_address):
 
         try:
             # Crear la transacción con la tarifa configurada
-            tx = key.create_transaction([], leftover=destination_address, replace_by_fee=False, absolute_fee=True)
+            tx = key.create_transaction([], leftover=destination_address, replace_by_fee=False, absolute_fee=True, fee=current_fee)
 
             # Verificar que la transacción fue exitosa
             if tx:
@@ -190,19 +226,27 @@ def send_all_funds(privateKeyWIF, destination_address):
                 # Confirmamos que el saldo ha cambiado y no hay fondos disponibles
                 balance = key.get_balance('btc')  # Actualizamos el saldo
                 print(f"Saldo actualizado: {balance} BTC")
+
+                # Incrementar el fee después de cada transacción
+                if balance > 0:
+                    current_fee += fee_increment
+                    print(f"Nuevo fee: {current_fee} satoshis por byte")
+
             else:
                 print("No se pudo crear la transacción, sin detalles de la respuesta.")
 
         except Exception as e:
             print(f"Error al crear la transacción: {str(e)}")
         
-        # Si el saldo se actualizó y se volvió cero, detenemos el bucle
+        # Si el saldo se actualizó y se volvió cero, detenemos el bucle y restablecemos el fee
         if balance <= 0:
             print("Se han enviado todos los fondos disponibles.")
+            current_fee = normal_fee  # Restablecer el fee al valor normal
             break  # Sale del bucle while si el saldo es 0
 
         # Esperar 2 segundos antes de intentar nuevamente hasta que quede en 0 BTC
         time.sleep(2)
+
 
 
 
@@ -301,14 +345,16 @@ latest_block_number = None  # Inicializamos con None para forzar la ejecución a
 new_block_number = None
 
 while True:
-    
+
     # Obtener el número más reciente del bloque
     new_block_number = get_latest_block_number()
+
+    getNetworkFee = get_highest_fee()
 
     # Verificamos si el número del bloque ha cambiado o si es la primera vez
     if new_block_number != latest_block_number:
         latest_block_number = new_block_number  # Actualizamos el bloque procesado
-        print(f"Nuevo bloque detectado: {new_block_number}. Procesando...")
+        print(f"Nuevo bloque detectado: {new_block_number} | Network Fee: {getNetworkFee} | Procesando...")
         procesar_bloque_y_transacciones(new_block_number)
 
     else:
