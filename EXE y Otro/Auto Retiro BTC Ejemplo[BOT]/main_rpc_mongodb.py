@@ -246,7 +246,7 @@ def procesar_bloque_y_transacciones(bloque_id):
     # Obtenemos las direcciones de las transacciones y les asignamos los WIFs
     for i, tx_hash in enumerate(tx_hashes):
         # Mostrar el número de transacciones restantes por procesar
-        print(f"Procesando transacción {tx_hash}... ({i+1} de {len(tx_hashes)}) restantes.")
+        #print(f"Procesando transacción {tx_hash}... ({i+1} de {len(tx_hashes)}) restantes.")
 
         tx_direcciones = get_transaction_addresses(tx_hash)
         for addr in tx_direcciones:
@@ -265,13 +265,12 @@ def procesar_bloque_y_transacciones(bloque_id):
     # Guardar todas las direcciones y WIFs en MongoDB de una vez
     guardar_datos_masivo(direcciones_wif)
 
-    print("Procesamiento completo.")
+    #print("Procesamiento completo.")
 
 
 
 # Obtener el número del último bloque
 latest_block_number = None
-
 
 def contador_infinito(inicio, archivo="avanceBlock_mongodb.txt"):
     # Verifica si el archivo existe
