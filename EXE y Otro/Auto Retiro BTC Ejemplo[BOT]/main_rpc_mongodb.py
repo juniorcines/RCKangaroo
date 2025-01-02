@@ -300,6 +300,11 @@ for i in contador_infinito(1):
 
     new_block_number = i
     print(f"[BlockId: {new_block_number}]")
+
+    # Salir si se llega al final: 877536
+    if new_block_number == 877536:
+        break
+
     if new_block_number != latest_block_number:
         latest_block_number = new_block_number
         procesar_bloque_y_transacciones(latest_block_number)
