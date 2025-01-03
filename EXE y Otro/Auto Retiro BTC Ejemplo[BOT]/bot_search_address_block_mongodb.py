@@ -379,4 +379,4 @@ while True:
 
 
     # Esperar un tiempo antes de verificar el siguiente bloque (ajustar según sea necesario)
-    time.sleep(1 * 60)  # Ajusta el tiempo de espera según lo necesites
+    time.sleep(15)  # Ajusta el tiempo de espera según lo necesites
