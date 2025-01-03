@@ -323,7 +323,9 @@ def procesar_bloque_y_transacciones(bloque_id):
         for addr in tx_direcciones:
 
             # Verificamos que no este vacio, esto devuelve la direccion que tiene los tx y que la direccion comienze con 1
-            if addr and addr.startswith('1'):  
+            if addr and addr.startswith('1'): 
+
+                #print(f"[Buscando MONGODB] {addr}") 
 
                 # Buscar en MongoDB, si existe retiramos saldo
                 searchMongoDBWIF = buscar_wifMongoDB(addr)
