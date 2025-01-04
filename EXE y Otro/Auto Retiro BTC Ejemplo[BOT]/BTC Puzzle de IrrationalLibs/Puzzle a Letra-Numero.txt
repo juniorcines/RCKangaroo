@@ -43,6 +43,13 @@ line 19: 1B4 8A3C2D5E7F4 :: termina con G6
 line 20: 4B0 8A1C9D3E6F2 :: termina con G5
 line 21: nada aca
 
+1.en la letra negra estaba los 3 caracteres ejemplo: O1B9 seria: O1 lo negro, final: 1B9
+2.letra rosa y blanca hacia los hex solo sacando los que son abcdef 123456789
+3.la letra G(numero) indicaba el final de los 11 digitos HEX de cada linea.
+4.la letra rosada oscura: N(Numero) no se para que seria
+5.la letra azul clara: M(numero) no se para que son
+
+
 Direccion: bc1qr5mssp6snmduqp9enx4dzmcxvk7qw83lceyy2v
 Pubkey: 039d7ce87733444acfde33960964344d8201d2d92ccdad0f5045e40fdcf963475b
 
