@@ -190,8 +190,9 @@ def get_transaction_addresses(txid=None):
         for i in range(len(e)):
             pubKey = e[i][3]
             # Convertir PubKey a Address
-            getAddress = pubkey_to_bitcoin_address(pubKey)
-            addresses.add(getAddress)
+            if pubKey:
+                getAddress = pubkey_to_bitcoin_address(pubKey)
+                addresses.add(getAddress)
 
 
         return addresses
