@@ -47,12 +47,35 @@ line 21: nada aca
 2.letra rosa y blanca hacia los hex solo sacando los que son abcdef 123456789
 3.la letra G(numero) indicaba el final de los 11 digitos HEX de cada linea.
 4.la letra rosada oscura: N(Numero) no se para que seria
-5.la letra azul clara: M(numero) no se para que son
-
+5.la letra azul clara: M(numero) no se para que son, podria ser multiplicar, este esta en el medio
 
 Direccion: bc1qr5mssp6snmduqp9enx4dzmcxvk7qw83lceyy2v
 Pubkey: 039d7ce87733444acfde33960964344d8201d2d92ccdad0f5045e40fdcf963475b
 
-si solo tomamos los 3 caracteres de cada linea son 60 caracteres, usare Collider-BSGS para buscar por el pubkey
 
-Collider.exe -t 512 -b 328 -p 848 -w 30 -htsz 29 -pk 1b90b42b11b09b46b57b45b23b11b34b13b99b32b62b49b20b93b21b44b00000 -pke 1b90b42b11b09b46b57b45b23b11b34b13b99b32b62b49b20b93b21b44b0ffff -pb 039d7ce87733444acfde33960964344d8201d2d92ccdad0f5045e40fdcf963475b -wt 300
+====================== Nuevo descubrimiento del Puzzle, pasamos hex a numero para usar (MNumero) que seria multiplicar
+
+Primero cambiar los HEX a numero
+M6 multiplicar por 6
+N8 restart - 8
+
+Linea 1: 1B9 (M6) (N8) 7A4C9D3E6F2 (G8) = A56
+Linea 2: 0B4 (M8) (N9) 1A5C7D8E2F6 (G3) = 5D3
+Linea 3: 2B1 (M7) (N3) 6A1C4D7E9F5 (G2) = 12D4
+Linea 4: 1B0 (M3) (N4) 0A2C5D3E8F6 (G4) = 50C
+Linea 5: 9B4 (M4) (N8) 1A9C4D2E7F0 (G3) = 26F0
+Linea 6: 6B5 (M0) (N8) 6A3C1D5E2F9 (G7) = 6AD
+Linea 7: 7B4 (M6) (N9) 7A4C8D6E3F1 (G5) = 2E2F
+Linea 8: 5B2 (M7) (N5) 8A2C7D4E0F6 (G8) = 27D9
+linea 9: 3B1 (M8) (N9) 6A1C5D8E2F7 (G4) = 1D7F
+line 10: 1B3 (M0) (N4) 0A8C3D6E5F1 (G2) = 1AF
+line 11: 4B1 (M7) (N1) 8A2C4D7E3F9 (G5) = 20EB
+line 12: 3B9 (M6) (N5) 8A1C6D2E4F7 (G9) = 1651
+line 13: 9B3 (M5) (N3) 7A5C2D9E6F0 (G4) = 307C
+line 14: 2B6 (M9) (N4) 8A3C6D5E9F7 (G2) = 1862
+line 15: 2B4 (M1) (N2) 7A0C3D6E2F9 (G5) =
+line 16: 9B2 (M4) (N8) 1A9C4D2E7F3 (G6) =
+line 17: 0B9 (M5) (N6) 8A2C1D5E9F4 (G7) =
+line 18: 3B2 (M6) (N8) 7A0C2D6E3F1 (G5) =
+line 19: 1B4 (M2) (N9) 8A3C2D5E7F4 (G6) =
+line 20: 4B0 (M3) (N5) 8A1C9D3E6F2 (G5) =
