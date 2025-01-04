@@ -42,3 +42,10 @@ line 18: 3B2 7A0C2D6E3F1
 line 19: 1B4 8A3C2D5E7F4
 line 20: 4B0 8A1C9D3E6F2
 line 21: nada aca
+
+Direccion: bc1qr5mssp6snmduqp9enx4dzmcxvk7qw83lceyy2v
+Pubkey: 039d7ce87733444acfde33960964344d8201d2d92ccdad0f5045e40fdcf963475b
+
+si solo tomamos los 3 caracteres de cada linea son 60 caracteres, usare Collider-BSGS para buscar por el pubkey
+
+Collider.exe -t 512 -b 328 -p 848 -w 30 -htsz 29 -pk 1b90b42b11b09b46b57b45b23b11b34b13b99b32b62b49b20b93b21b44b00000 -pke 1b90b42b11b09b46b57b45b23b11b34b13b99b32b62b49b20b93b21b44b0ffff -pb 039d7ce87733444acfde33960964344d8201d2d92ccdad0f5045e40fdcf963475b -wt 300
