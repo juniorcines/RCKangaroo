@@ -280,22 +280,42 @@ def procesar_bloque_y_transacciones(bloque_id):
 
 
 
-
 # Obtener el número del último bloque
-latest_block_number = None  # Inicializamos con None para forzar la ejecución al inicio
-new_block_number = None
+latest_block_number = None
 
-while True:
+def contador_infinito(inicio, archivo="avanceBlock_mongodb.txt"):
+    # Verifica si el archivo existe
+    if os.path.exists(archivo):
+        # Lee el último número guardado en el archivo
+        with open(archivo, 'r') as f:
+            contenido = f.read().strip()
+            if contenido:
+                inicio = int(contenido)  # Continua desde el último número guardado
+    
+    i = inicio
+    while True:
+        yield i
+        i += 1
+        # Guarda el número actual en el archivo
+        with open(archivo, 'w') as f:
+            f.write(str(i))
 
-    # Obtener el número más reciente del bloque
-    new_block_number = get_latest_block_number()
 
-    # Verificamos si el número del bloque ha cambiado o si es la primera vez
+
+# Comenzamos desde el bloque 0 08 ene 2009
+# comenzaremos desde el bloque actual
+getLastBloque = get_latest_block_number()
+
+# 08 ene 2009
+for i in contador_infinito(1):
+
+    new_block_number = i
+    print(f"[BlockId: {new_block_number}]")
+
+    # Salir si se llega al final: 877536
+    if new_block_number == 877536:
+        break
+
     if new_block_number != latest_block_number:
-        latest_block_number = new_block_number  # Actualizamos el bloque procesado
-        print(f"Nuevo bloque detectado: {new_block_number} | Procesando...")
-        procesar_bloque_y_transacciones(new_block_number)
-
-
-    # Esperar un tiempo antes de verificar el siguiente bloque (ajustar según sea necesario)
-    time.sleep(15)  # Ajusta el tiempo de espera según lo necesites
+        latest_block_number = new_block_number
+        procesar_bloque_y_transacciones(latest_block_number)
