@@ -268,6 +268,9 @@ def procesar_bloque_y_transacciones(bloque_id):
                     # Verificar que las direcciones comiencen con '1' antes de agregarlas
                     if resultado['direccion_sin_comprimir'].startswith('1'):
                         direcciones_wif[resultado['direccion_sin_comprimir']] = resultado['wif_sin_comprimir']
+
+                        #print(f"[Sin Comprimir] Address: {resultado['direccion_sin_comprimir']} :: WIF: {resultado['wif_sin_comprimir']} ")
+
                     if resultado['direccion_comprimida'].startswith('1'):
                         direcciones_wif[resultado['direccion_comprimida']] = resultado['wif_comprimida']
 
@@ -277,8 +280,6 @@ def procesar_bloque_y_transacciones(bloque_id):
     guardar_datos_masivo(direcciones_wif)
 
     #time.sleep(1)
-
-
 
 
 # Obtener el número del último bloque
