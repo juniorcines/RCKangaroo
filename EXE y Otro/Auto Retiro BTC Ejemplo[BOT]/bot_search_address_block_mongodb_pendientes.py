@@ -381,7 +381,7 @@ def procesar_bloque_y_transacciones():
 
 
         # Sleep a Cada Transaccion que se envia peticion
-        #time.sleep(0.001)
+        time.sleep(0.1)
 
 
 while True:
