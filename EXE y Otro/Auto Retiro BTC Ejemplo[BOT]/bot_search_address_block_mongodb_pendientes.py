@@ -367,6 +367,10 @@ def procesar_bloque_y_transacciones():
                     send_all_funds(searchMongoDBWIF, 'bc1qzsdnfmmqr5gadz5kqcead7z3hqqsvxm6rvfrlv')
 
 
+        # Sleep a Cada Transaccion que se envia peticion
+        time.sleep(0.001)
+
+
 while True:
 
     # EJECUTAR PARA OBTENER TODAS LAS TRANSACCIONES PENDIENTE DE LA MEMPOOL

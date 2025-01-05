@@ -79,6 +79,7 @@ def get_transaction_addresses(txid=None, mode="vout"):
 
 
 # Obtener las transacciones pendiente que aun no esta en los bloque
+'''
 def get_mempool_transactions():
     data = {
         "method": "getrawmempool",
@@ -95,12 +96,34 @@ def get_mempool_transactions():
     except requests.exceptions.RequestException as e:
 
         return []
+'''
+
+def get_mempool_transactions():
+    data = {
+        "method": "getrawmempool",
+        "params": [],  # Sin parámetros adicionales
+        "id": 1
+    }
+
+    try:
+        response = requests.post(f'http://{btcHost}:8332/', json=data, auth=auth, headers={'Content-Type': 'application/json'})
+        response.raise_for_status()  # Verifica si la solicitud tuvo éxito
+        result = response.json().get('result')
+
+        # Guardar el resultado en un archivo JSON
+        with open('mempool_transactions.json', 'w') as f:
+            json.dump(result, f, indent=4)  # Guarda el resultado con formato legible
+
+        return result  # Esto será una lista de IDs de transacciones pendientes
+
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching mempool transactions: {e}")
+        return []
 
 
 # Obtener todos los Txid de Transacciones Pendientes
 getTransaccionesPendientesMempool = get_mempool_transactions()
 
-print(getTransaccionesPendientesMempool)
 
 '''
 for i, tx_hash in enumerate(getTransaccionesPendientesMempool):
