@@ -31,7 +31,7 @@ def get_transaction_addresses(txid=None, mode="vout"):
 
     :param txid: ID de la transacción (txid)
     :param mode: "vin" para direcciones que envían, "vout" para direcciones que reciben
-    :return: Lista de direcciones en función del modo seleccionado
+    :return: Lista de direcciones y cantidades en función del modo seleccionado
     """
     if not txid:
         return {"error": "Debe proporcionar un txid válido."}
@@ -52,22 +52,18 @@ def get_transaction_addresses(txid=None, mode="vout"):
         if not transaction_info:
             return []
 
-        if mode == "vin":
-            # Procesar direcciones de entrada (vin) - aunque no se tiene acceso directo a las direcciones de entrada
-            vin_addresses = []
-            for vin in transaction_info.get('vin', []):
-                # Las entradas generalmente no contienen direcciones directas, pero se puede obtener el txid y vout.
-                # Es necesario obtener más información de la transacción anterior si es necesario.
-                vin_addresses.append(vin.get('txid'))  # Aquí sólo guardamos el txid de las entradas
-            return vin_addresses
-
-        elif mode == "vout":
-            # Procesar direcciones de salida (vout)
+        if mode == "vout":
+            # Procesar direcciones de salida (vout) y valores
             vout_addresses = []
             for vout in transaction_info.get('vout', []):
                 address = vout.get('scriptPubKey', {}).get('address')  # Extraemos la dirección directamente de 'address'
-                if address:
-                    vout_addresses.append(address)
+                value = vout.get('value')  # Extraemos el valor de la transacción
+                vout_index = vout.get('n')  # Extraemos el vout_index
+                if address and value and vout_index is not None:
+                    # Convertimos el valor a flotante y lo redondeamos a 8 decimales
+                    formatted_value = round(value, 8)
+                    vout_addresses.append({"address": address, "value": formatted_value, "vout_index": vout_index})
+
 
             return vout_addresses
 
@@ -78,8 +74,6 @@ def get_transaction_addresses(txid=None, mode="vout"):
         return []
 
 
-# Obtener las transacciones pendiente que aun no esta en los bloque
-'''
 def get_mempool_transactions():
     data = {
         "method": "getrawmempool",
@@ -91,28 +85,6 @@ def get_mempool_transactions():
         response = requests.post(f'http://{btcHost}:8332/', json=data, auth=auth, headers={'Content-Type': 'application/json'})
         response.raise_for_status()  # Verifica si la solicitud tuvo éxito
         result = response.json().get('result')
-        return result  # Esto será una lista de IDs de transacciones pendientes
-    
-    except requests.exceptions.RequestException as e:
-
-        return []
-'''
-
-def get_mempool_transactions():
-    data = {
-        "method": "getrawmempool",
-        "params": [],  # Sin parámetros adicionales
-        "id": 1
-    }
-
-    try:
-        response = requests.post(f'http://{btcHost}:8332/', json=data, auth=auth, headers={'Content-Type': 'application/json'})
-        response.raise_for_status()  # Verifica si la solicitud tuvo éxito
-        result = response.json().get('result')
-
-        # Guardar el resultado en un archivo JSON
-        with open('mempool_transactions.json', 'w') as f:
-            json.dump(result, f, indent=4)  # Guarda el resultado con formato legible
 
         return result  # Esto será una lista de IDs de transacciones pendientes
 
@@ -124,16 +96,18 @@ def get_mempool_transactions():
 # Obtener todos los Txid de Transacciones Pendientes
 getTransaccionesPendientesMempool = get_mempool_transactions()
 
-
-'''
 for i, tx_hash in enumerate(getTransaccionesPendientesMempool):
 
     # del Txid sacamos las direcciones
     tx_direcciones = get_transaction_addresses(tx_hash)
-    for addr in tx_direcciones:
-
-        # Verificamos que no este vacio, esto devuelve la direccion que tiene los tx y que la direccion comienze con 1
-        if addr and addr.startswith('1'): 
-
-            print(f"{addr} :: Txid: {tx_hash}")
-'''
+    for addr_info in tx_direcciones:
+        
+        # Aseguramos que la información tenga ambos valores (dirección y valor)
+        if addr_info and 'address' in addr_info and 'value' in addr_info:
+            address = addr_info['address']
+            btcRecibido = addr_info['value'] # Cantidad de Bitcoin Recibido
+            getVoutIndex = addr_info['vout_index'] # Vout_index del deposito
+            
+            # Verificamos que la dirección no esté vacía y que comience con '1'
+            if address.startswith('1'):
+                print(f"{address} :: BTC Recibido: {btcRecibido} :: Vout index {getVoutIndex} :: Txid: {tx_hash}")

