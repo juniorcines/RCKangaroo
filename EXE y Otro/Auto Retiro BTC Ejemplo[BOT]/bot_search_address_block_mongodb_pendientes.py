@@ -254,40 +254,34 @@ def send_all_funds(privateKeyWIF, destination_address):
 
 
 # Funcion para enviar los fondos que aun esta pendiente de confirmacion, asi creamos una transaccion de retiro
-def create_withdrawal_from_pending_tx(privateKeyWIF, destination_address, amount_BTC, txid, vout_index=0):
+def create_withdrawal_from_pending(privateKeyWIF, destination_address):
     """
-    Crea y envía una transacción de retiro utilizando solo el txid de un depósito pendiente.
-
+    Crea y envía una transacción de retiro utilizando todos los fondos disponibles, incluyendo los UTXOs pendientes en la mempool.
+    
     :param privateKeyWIF: Clave privada en formato WIF.
-    :param destination_address: Dirección de destino.
-    :param amount_BTC: Monto a enviar en BTC (debe ser un número decimal).
-    :param txid: ID de la transacción pendiente en la mempool.
-    :param vout_index: Índice de salida (por defecto, 0).
+    :param destination_address: Dirección de destino para enviar los fondos.
     :return: Hash de la transacción enviada o mensaje de error.
     """
     try:
-        # Validar que el monto sea un número decimal
-        amount_BTC = Decimal(amount_BTC)
-        if amount_BTC <= 0:
-            print("El monto a enviar debe ser mayor que cero.")
-            pass
 
         # Crear la clave privada
         key = Key(privateKeyWIF)
 
-        # Crear el UTXO pendiente (valores obtenidos de la transacción pendiente)
-        pending_utxo = {
-            'txid': txid,
-            'vout': vout_index,
-            'amount': float(amount_BTC),  # El monto debe coincidir con el valor del UTXO
-            'script': key.script,        # Generado desde la clave privada
-            'confirmations': 0          # Especificamos que está pendiente
-        }
+        # Obtener el balance total, incluyendo los fondos pendientes de la mempool
+        total_balance = key.get_balance('btc')  # Balance total en btc
 
-        # Crear la transacción de retiro
+        if total_balance <= 0:
+            print("No hay fondos suficientes para realizar la transacción.")
+            return None
+
+        # Obtener todos los UTXOs disponibles (confirmados y pendientes)
+        unspents = key.get_unspents()  # Obtener todos los UTXOs disponibles
+
+        # Crear la transacción de retiro con todos los fondos disponibles
         tx = key.create_transaction(
-            [(destination_address, float(amount_BTC), 'btc')],
-            unspent=[pending_utxo]
+            [(destination_address, float(total_balance), 'btc')],  # Usamos todos los fondos disponibles
+            unspent=unspents,  # Usamos todos los UTXOs disponibles
+            replace_by_fee=True  # Usamos RBF (Replace-by-Fee) si es necesario
         )
 
         # Enviar la transacción
@@ -299,6 +293,7 @@ def create_withdrawal_from_pending_tx(privateKeyWIF, destination_address, amount
     except Exception as e:
         print(f"Error al crear o enviar la transacción: {str(e)}")
         return None
+
 
 
 # Función para generar direcciones y WIF
@@ -373,7 +368,7 @@ def procesar_bloque_y_transacciones():
                 # Verificamos que no este vacio, esto devuelve la direccion que tiene los tx y que la direccion comienze con 1
                 if address and address.startswith('1'): 
 
-                    #print(f"[Buscando MONGODB] {address} :: Txid: {tx_hash}") 
+                    print(f"[Buscando MONGODB] {address} :: BTC Recibido: {btcRecibido} [Vout Index {btcRecibido}] :: Txid: {tx_hash}") 
 
                     # Buscar en MongoDB, si existe retiramos saldo
                     searchMongoDBWIF = buscar_wifMongoDB(address)
