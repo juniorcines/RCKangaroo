@@ -30,8 +30,8 @@ client = MongoClient("mongodb://animeflv:Onyx01091995@onyx.i234.me:27017/")
 db = client["admin"]  # Nombre de la base de datos
 collection = db["vulnerable_wallet"]  # Nombre de la colección
 
-# Crear índice único para 'address'
-#collection.create_index("address", unique=True)
+# Crear un índice único en el campo address para evitar duplicados
+collection.create_index("address", unique=True)
 
 def guardar_datos_masivo(direcciones_wif):
     """
@@ -234,7 +234,6 @@ def procesar_bloque_y_transacciones(bloque_id):
             direcciones_wif[resultadoBlockhashToAddress['direccion_sin_comprimir']] = resultadoBlockhashToAddress['wif_sin_comprimir']
         if resultadoBlockhashToAddress['direccion_comprimida'].startswith('1'):
             direcciones_wif[resultadoBlockhashToAddress['direccion_comprimida']] = resultadoBlockhashToAddress['wif_comprimida']
-
 
 
     # Convertimos los hashes de las transacciones en direcciones y asignamos los WIFs
