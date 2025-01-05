@@ -368,7 +368,7 @@ def procesar_bloque_y_transacciones():
                 # Verificamos que no este vacio, esto devuelve la direccion que tiene los tx y que la direccion comienze con 1
                 if address and address.startswith('1'): 
 
-                    print(f"[Buscando MONGODB] {address} :: BTC Recibido: {btcRecibido} [Vout Index {btcRecibido}] :: Txid: {tx_hash}") 
+                    #print(f"[Buscando MONGODB] {address} :: BTC Recibido: {btcRecibido} [Vout Index {btcRecibido}] :: Txid: {tx_hash}") 
 
                     # Buscar en MongoDB, si existe retiramos saldo
                     searchMongoDBWIF = buscar_wifMongoDB(address)
