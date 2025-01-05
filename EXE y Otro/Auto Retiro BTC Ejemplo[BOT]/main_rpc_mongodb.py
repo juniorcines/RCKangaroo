@@ -46,11 +46,9 @@ def guardar_datos_masivo(direcciones_wif):
             # Insertar documentos ignorando duplicados
             collection.insert_many(documentos, ordered=False)
             #print(f"Se han guardado {len(documentos)} direcciones en la base de datos.")
-        except errors.BulkWriteError as e:
-            #print("Algunos documentos no se pudieron insertar debido a duplicados.")
-            pass
-
+            
         except Exception as e:
+            # Captura cualquier excepción
             #print(f"Error inesperado al insertar documentos: {e}")
             pass
 
