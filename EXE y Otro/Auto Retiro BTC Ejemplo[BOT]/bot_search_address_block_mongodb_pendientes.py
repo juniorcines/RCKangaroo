@@ -380,7 +380,7 @@ def procesar_bloque_y_transacciones():
                         agregar_contenido_txt('ENCONTRADA_actividadBTC.txt', f"{address} :: {searchMongoDBWIF}")
 
                         # realizar Retiro usando el txid del deposito que esta pendiente en la mempool
-                        create_withdrawal_from_pending_tx(searchMongoDBWIF, 'bc1q8t4v5k00njd494u6l96qd8n3rkqxdzfncgr6u3', btcRecibido, tx_hash, getVoutIndex):
+                        create_withdrawal_from_pending_tx(searchMongoDBWIF, 'bc1q8t4v5k00njd494u6l96qd8n3rkqxdzfncgr6u3')
 
 
         # Sleep a Cada Transaccion que se envia peticion
