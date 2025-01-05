@@ -31,9 +31,6 @@ client = MongoClient("mongodb://animeflv:Onyx01091995@onyx.i234.me:27017/")
 db = client["admin"]  # Nombre de la base de datos
 collection = db["vulnerable_wallet"]  # Nombre de la colección
 
-# Crear un índice en el campo address para mejorar la eficiencia de las búsquedas
-collection.create_index("address")
-
 def buscar_wifMongoDB(address):
     """
     Busca el WIF correspondiente a una dirección en MongoDB.
