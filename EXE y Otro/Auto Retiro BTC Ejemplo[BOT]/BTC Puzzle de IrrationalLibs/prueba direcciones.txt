@@ -1,0 +1,160 @@
+Dirección arriba: K
+Dirección arriba izquierda: K
+Dirección izquierda: K2J6M9B1O4R5Z0Y2W8V3U9T
+Dirección abajo izquierda: K8B5Z4V0S4F7C7N4L1J4O
+Dirección abajo: KJMBORZYWVUTSIGFEDCAP
+Dirección abajo derecha: K1J3M5B504R4Z6Y2W5V1U
+Dirección derecha: K7H0L3X1Q5N8P7A4C9D3E6F2G8I7
+Dirección arriba derecha: K
+Dirección arriba: KH
+Dirección arriba izquierda: K7
+Dirección izquierda: K1J8M4B0O7R2Z6Y3W9V5U4T0S
+Dirección abajo izquierda: K7B3Z5V5S2F2C8N5L9J0
+Dirección abajo: KJMBORZYWVUTSIGFEDCA
+Dirección abajo derecha: K9J1M4B3O6R4Z7Y2W2V3
+Dirección derecha: K3H6L2X0Q4N9P1A5C7D8E2F6G3
+Dirección arriba derecha: K0
+Dirección arriba: KHL
+Dirección arriba izquierda: K3H
+Dirección izquierda: K9J7M1B2O6R3Z5Y8W4V0U7T9S1I
+Dirección abajo izquierda: K3B1Z6V3S5F9C7N0L3J
+Dirección abajo: KJMBORZYWVUTSIGFEDC
+Dirección abajo derecha: K6J0M2B1O0R6Z6Y8W7V
+Dirección derecha: K4H0L5X2Q8N3P6A1C4D7E9F5
+Dirección arriba derecha: K6X
+Dirección arriba: KHLX
+Dirección arriba izquierda: K4H0
+Dirección izquierda: K6J3M0B105R9Z4Y0W7V2U6T3S8I2G
+Dirección abajo izquierda: K1B2Z9V8S9F5C1N1L2
+Dirección abajo: KJMBORZYWVUTSIGFED
+Dirección abajo derecha: K7J6M1B4O7R9Z7Y0W2
+Dirección derecha: K8H2L1X7Q9N4P0A2C5D3E8
+Dirección arriba derecha: K0X5
+Dirección arriba: KHLXQ
+Dirección arriba izquierda: K8H6L
+Dirección izquierda: K7J1M4B9O3R6Z8Y2W5V9U1T7S0I4G6F
+Dirección abajo izquierda: K0B8Z2V1S4F6C8N5L
+Dirección abajo: KJMB0RZYWVUTSIGFE
+Dirección abajo derecha: K2J7M3B3O4R3Z1Y2W
+Dirección derecha: K0H3L6X5Q2N8P1A9C4D2
+Dirección arriba derecha: K2X4P
+Dirección arriba: KHLXQN
+Dirección arriba izquierda: K0H0L3
+Dirección izquierda: K2J0M5B6O1R2Z7Y4W0V3U5T8S6I3G0F7E
+Dirección abajo izquierda: K6B6Z3V5S2F2C7N0
+Dirección abajo: KJMBORZYWVUTSIGF
+Dirección abajo derecha: K3J8M1B9O6R6Z6Y8
+Dirección derecha: K9H7L3X1Q4N8P6A3C1
+Dirección arriba derecha: K3X8P4
+Dirección arriba: KHLXQNP
+Dirección arriba izquierda: K9H2L2X
+Dirección izquierda: K3J6M4B7O2R9Z1Y5W3V8U6T0S4I7G9F2E5D
+Dirección abajo izquierda: K7B4Z8V3S5F5C8N
+Dirección abajo: KJMBORZYWVUTSIG
+Dirección abajo derecha: K0J0M9B2O5R4Z5Y
+Dirección derecha: K1H8L6X2Q5N9P7A4
+Dirección arriba derecha: K7X9P5D
+Dirección arriba: KHLXQNPA
+Dirección arriba izquierda: K1H3L5X1
+Dirección izquierda: K0J7M2B5O8R1Z3Y6W9V4U0T7S2I5G1F3E6D8C
+Dirección abajo izquierda: K8B6Z6V8S6F6C8
+Dirección abajo: KJMBORZYWVUTSI
+Dirección abajo derecha: K5J7M3B2O3R3Z6
+Dirección derecha: K6H3L9X4Q1N5P8
+Dirección arriba derecha: K8X2P1D6
+Dirección arriba: KHLXQNPAC
+Dirección arriba izquierda: K6H7L1X0Q
+Dirección izquierda: K5J8M1B306R4Z0Y9W7V2U5T1S3I8G6F0E4D7C2A
+Dirección abajo izquierda: K0B0Z2V4S7F5C
+Dirección abajo: KJMBORZYWVUTS
+Dirección abajo derecha: K6J6M6B9O7R9
+Dirección derecha: K2H7L4X0Q3N9
+Dirección arriba derecha: K3X4P2D2G
+Dirección arriba: KHLXQNPACD
+Dirección arriba izquierda: K2H8L6X2Q5
+Dirección izquierda: K6J0M3B1O4R7Z8Y2W5V0U3T6S9I4G7F2E8D5C1A6P
+Dirección abajo izquierda: K7B7Z5V1S5F3
+Dirección abajo: KJMBORZYWVUT
+Dirección abajo derecha: K3J5M4B0O8
+Dirección derecha: K9H2L5X1Q7
+Dirección arriba derecha: K7X5P9D9G7
+Dirección arriba: KHLXQNPACDE
+Dirección arriba izquierda: K9H3L3X7Q4N
+Dirección izquierda: K3J7M1B4O6R2Z5Y3W0V4U8T9S7I2G1F5E6D3C8A0P4N
+Dirección abajo izquierda: K6B4Z2V9S6F
+Dirección abajo: KJMBORZYWVU
+Dirección abajo derecha: K2J9M2B3
+Dirección derecha: K0H5L2X9
+Dirección arriba derecha: K2X1P3D8
+Dirección arriba: KHLXQNPACDEF
+Dirección arriba izquierda: K0H7L6X5Q8N8
+Dirección izquierda: K2J6M9B3O0R4Z7Y8W2V5U1T6S0I5G9F3E7D4C2A8P1N6Q
+Dirección abajo izquierda: K5B6Z2V7S5
+Dirección abajo: KJMBORZYWV
+Dirección abajo derecha: K0J1M9
+Dirección derecha: K1H4L7
+Dirección arriba derecha: K5X3P4
+Dirección arriba: KHLXQNPACDEFG
+Dirección arriba izquierda: K1H2L9X1Q9N9P
+Dirección izquierda: K0J5M3B9O7R4Z1Y6W2V0U5T8S3I9G7F4E2D6C1A8P5N0Q3X
+Dirección abajo izquierda: K9B5Z8V8S
+Dirección abajo: KJMBORZYW
+Dirección abajo derecha: K3J4
+Dirección derecha: K2H6
+Dirección arriba derecha: K4X7
+Dirección arriba: KHLXQNPACDEFGI
+Dirección arriba izquierda: K2H5L4X2Q2N3P7
+Dirección izquierda: K3J9M6B2O4R6Z6Y2W5V8U3T1S7I4G0F6E9D2C5A7P3N1Q8X4L
+Dirección abajo izquierda: K1B3Z0V0
+Dirección abajo: KJMBORZY
+Dirección abajo derecha: K5
+Dirección derecha: K7
+Dirección arriba derecha: K6
+Dirección arriba: KHLXQNPACDEFGIST
+Dirección arriba izquierda: K
+Dirección izquierda: K
+Dirección abajo izquierda: K
+Dirección abajo: KJMBOR
+Dirección abajo derecha: K1J6M0
+Dirección derecha: K0H3L6X4Q8N2P7A0C3D6E2F9G5I1S7T4U8V0W2Y6Z3R5O9B2M4
+Dirección arriba derecha: K0X0P8D0G4T9W5R1
+Dirección arriba: KHLXQNPACDEFGISTU
+Dirección arriba izquierda: K0H
+Dirección izquierda: K1J
+Dirección abajo izquierda: K5B
+Dirección abajo: KJMBO
+Dirección abajo derecha: K2J2M
+Dirección derecha: K7H3L0X5Q6N8P1A9C4D2E7F3G6I0S5T1U4V8W2Y7Z6R3O0B9
+Dirección arriba derecha: K3X1P2D2G2T3W4R0M
+Dirección arriba: KHLXQNPACDEFGISTUV
+Dirección arriba izquierda: K7H0L
+Dirección izquierda: K2J5M
+Dirección abajo izquierda: K6B6
+Dirección abajo: KJMB
+Dirección abajo derecha: K0J3
+Dirección derecha: K1H4L7X0Q3N6P8A2C1D5E9F4G7I3S6T9U2V5W8Y1Z4R7O3
+Dirección arriba derecha: K3X1P1D5G3T8W8R2M2
+Dirección arriba: KHLXQNPACDEFGISTUVW
+Dirección arriba izquierda: K1H3L4X
+Dirección izquierda: K0J6M2B
+Dirección abajo izquierda: K2B
+Dirección abajo: KJM
+Dirección abajo derecha: K7J
+Dirección derecha: K9H5L3X1Q4N8P7A0C2D6E3F1G5I9S4T7U5V2W0Y6Z3R8
+Dirección arriba derecha: K4X8P5D3G9T4W7R1M1H
+Dirección arriba: KHLXQNPACDEFGISTUVWY
+Dirección arriba izquierda: K9H3L5X3Q
+Dirección izquierda: K7J2M4B1O
+Dirección abajo izquierda: K3
+Dirección abajo: KJ
+Dirección abajo derecha: K1
+Dirección derecha: K3H0L6X5Q1N9P8A3C2D5E7F4G6I0S3T8U1V7W2Y5Z9
+Dirección arriba derecha: K5X6P3D4G7T2W1R9M9H3
+Dirección arriba: KHLXQNPACDEFGISTUVWYZ
+Dirección arriba izquierda: K3H4L6X8Q6N
+Dirección izquierda: K1J3M0B4O6R
+Dirección abajo izquierda: K
+Dirección abajo: K
+Dirección abajo derecha: K
+Dirección derecha: K2H7L4X0Q6N5P8A1C9D3E6F2G5I7S4T0U3V2W8Y6
+Dirección arriba derecha: K0X3P0D6G0T0W3R6M6H2Q
