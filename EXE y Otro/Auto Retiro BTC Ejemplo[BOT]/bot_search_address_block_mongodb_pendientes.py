@@ -29,24 +29,31 @@ from pymongo import MongoClient
 # Configurar la conexión a MongoDB
 client = MongoClient("mongodb://animeflv:Onyx01091995@onyx.i234.me:27017/")
 db = client["admin"]  # Nombre de la base de datos
-collection = db["vulnerable_wallet"]  # Nombre de la colección
+
+# Colecciones
+collection1 = db["vulnerable_wallet"]  # Primera colección
+collection2 = db["milk_sad"]     # Segunda colección
 
 def buscar_wifMongoDB(address):
     """
-    Busca el WIF correspondiente a una dirección en MongoDB.
+    Busca el WIF correspondiente a una dirección en dos colecciones de MongoDB.
     
     :param address: La dirección a buscar.
-    :return: El WIF correspondiente a la dirección, o None si no se encuentra.
+    :return: El WIF correspondiente a la dirección, o None si no se encuentra en ninguna colección.
     """
     try:
-        # Realizar la consulta buscando el address
-        resultado = collection.find_one({"address": address}, {"_id": 0, "wif": 1})
+        # Buscar en la primera colección
+        resultado1 = collection1.find_one({"address": address}, {"_id": 0, "wif": 1})
+        if resultado1:
+            return resultado1["wif"]
         
-        if resultado:
-            return resultado["wif"]
-        else:
-            #print(f"Dirección {address} no encontrada.")
-            return None
+        # Buscar en la segunda colección si no se encuentra en la primera
+        resultado2 = collection2.find_one({"address": address}, {"_id": 0, "wif": 1})
+        if resultado2:
+            return resultado2["wif"]
+        
+        # Si no se encuentra en ninguna colección
+        return None
 
     except Exception as e:
         print(f"Error al buscar la dirección: {e}")
