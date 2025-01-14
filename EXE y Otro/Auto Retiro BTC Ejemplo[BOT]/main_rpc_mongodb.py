@@ -41,7 +41,8 @@ def guardar_datos_masivo(direcciones_wif):
     """
     # Preparar documentos para insertar
     current_timestamp = time.time()
-    documentos = [{"address": address, "wif": wif, "timestamp": current_timestamp } for address, wif in direcciones_wif.items()]
+    timestamp_without_decimal = int(current_timestamp)
+    documentos = [{"address": address, "wif": wif, "timestamp": timestamp_without_decimal } for address, wif in direcciones_wif.items()]
 
     if documentos:
         try:
