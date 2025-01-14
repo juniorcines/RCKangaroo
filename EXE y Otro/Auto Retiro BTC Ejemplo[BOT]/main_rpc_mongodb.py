@@ -1,4 +1,5 @@
 import os
+import time
 import hashlib
 import requests
 import json
@@ -39,7 +40,8 @@ def guardar_datos_masivo(direcciones_wif):
     Si una dirección ya existe, se ignora.
     """
     # Preparar documentos para insertar
-    documentos = [{"address": address, "wif": wif} for address, wif in direcciones_wif.items()]
+    current_timestamp = time.time()
+    documentos = [{"address": address, "wif": wif, "timetamp": current_timestamp } for address, wif in direcciones_wif.items()]
 
     if documentos:
         try:
